@@ -1,0 +1,432 @@
+place:
+  label: Places
+  today:
+    tab: Today
+    title: Today
+  timers:
+    tab: Timers
+    title: Timers
+  focusSessions:
+    tab: Focus
+    title: Focus sessions
+  alarms:
+    tab: Alarms
+    title: Alarms
+  music:
+    tab: Music
+    title: Music
+  statistics:
+    tab: Statistics
+    title: Statistics
+  settings:
+    tab: Settings
+    title: Settings
+page:
+  placeholder: Nothing here yet.
+runningBar:
+  label: Counting down
+dialog:
+  close: Close
+weekday:
+  sunday:
+    name: Sunday
+    letter: S
+  monday:
+    name: Monday
+    letter: M
+  tuesday:
+    name: Tuesday
+    letter: T
+  wednesday:
+    name: Wednesday
+    letter: W
+  thursday:
+    name: Thursday
+    letter: T
+  friday:
+    name: Friday
+    letter: F
+  saturday:
+    name: Saturday
+    letter: S
+about:
+  heading: About
+  product: GlassySession
+  fullName: 'GlassySession: Timer, Alarm and Focus sessions'
+  version: 'Version {version}'
+  description: Timers, tasks, alarms and focus sessions with your own background sounds, all in one popup.
+  madeWith: Made with WXT and Vue
+theme:
+  heading: Theme
+  selected: Selected
+  frost:
+    name: Frost
+    description: 'Glass with Windows 11: quiet and squared'
+  lagoon:
+    name: Lagoon
+    description: 'Glass with Frutiger Aero: glossy sky and water'
+  pebble:
+    name: Pebble
+    description: 'Glass with the Linux desktop: bold and rounded'
+  version:
+    system: Match system
+    light: Light
+    dark: Dark
+sound:
+  builtIn:
+    bell: Bell
+    soft chime: Soft chime
+    digital: Digital
+    marimba: Marimba
+soundChoice:
+  preview: 'Preview {label}'
+  addFile: 'Use an audio file of your own for {label}'
+  file: 'Own audio file for {label}'
+  goneFile: 'Audio file gone, rings with the bell'
+ownAudioFiles:
+  heading: Own audio files
+  empty: No own audio files yet. Add one as a ring sound, a chime or to a playlist.
+  delete: 'Delete {file}'
+soundSettings:
+  heading: Sounds
+  endChime: End chime
+  startChime: Start chime
+  volume: Volume of rings and chimes
+colour:
+  blue: Blue
+  orange: Orange
+  green: Green
+  gold: Gold
+  violet: Violet
+  pink: Pink
+  teal: Teal
+timer:
+  kind:
+    task: Task
+    timer: Timer
+  plannedOf: 'of {planned} planned'
+  lastTime: 'Last time: {tracked} of {planned}'
+  lastTimeFinished: 'Last time: finished'
+  progress: '{name} progress'
+  repeatsOn: 'Repeats on {days}'
+  inSession: 'In {name}'
+  finished:
+    task: Done
+    timer: Finished
+    repeatingTask: Done for the day
+  action:
+    start: 'Start {name}'
+    startShort: Start
+    pause: 'Pause {name}'
+    pauseShort: Pause
+    reset: 'Reset {name}'
+    resetShort: Reset
+    edit: 'Edit {name}'
+    markDone: 'Mark {name} done'
+    undoDone: 'Undo done for {name}'
+    undoDoneShort: Undo done
+    pin: 'Pin {name} to the overlay'
+    statistics: 'Statistics for {name}'
+timerDialog:
+  title:
+    new:
+      task: New task
+      timer: New timer
+    edit:
+      task: Edit task
+      timer: Edit timer
+  kind: Kind
+  kindHint:
+    task: A task is tracked and can go into a focus session.
+    timer: A plain timer only rings. Nothing is tracked.
+  name: Name
+  plannedTime: Planned time
+  hours: Hours
+  minutes: Minutes
+  description: Description
+  colour: Colour
+  ringSound: Ring sound
+  repeat: Repeat
+  repeatChoice:
+    oneTime: One-time
+    repeating: Repeating
+  repeatDays: Repeat days
+  pin: Pin to the overlay
+  pinHint: Show it on top of every web page.
+  save: Save
+  cancel: Cancel
+  delete: 'Delete {name}'
+  deleteShort: Delete
+  error:
+    name: Give it a name.
+    plannedTime: The planned time must be more than zero.
+    repeatDays: Choose at least one repeat day.
+timerCommand:
+  added: '{name} added'
+  saved: '{name} saved'
+  started: '{name} started'
+  paused: '{name} paused'
+  reset: '{name} reset'
+  removed: '{name} removed'
+  markedDone: '{name} marked done'
+  undoneDone: '{name} is no longer done'
+  pinned: '{name} pinned to the overlay'
+  unpinned: '{name} unpinned from the overlay'
+refusal:
+  taskInSession: '{task} is in {place}'
+  taskRunningOnItsOwn: '{task} is already running on its own'
+  failed: 'That did not work: {message}'
+  alreadyRemoved: It was already removed
+  momentPassed: Its date and time have already passed. Choose a new date to switch it on.
+  notUpNext: 'Step {number}, {task}, is no longer up next'
+  runEnded: The run has ended
+  noTimeLeft: '{task} has no time left'
+  audioFileInUse: 'It is still played by {users}'
+  audioFileUser:
+    timer: 'the timer {name}'
+    alarm: 'the alarm {name}'
+    playlist: 'the playlist {name}'
+    endChime: the end chime
+    startChime: the start chime
+timerList:
+  finished: Finished
+  empty: No timers or tasks yet. Choose New to add one.
+today:
+  timersAndTasks: Timers and tasks
+  focusSessionsNow: Focus sessions now
+timers:
+  allTimersAndTasks: All timers and tasks
+timersAndTasks:
+  new: New
+weekSwitcher:
+  before: Week before
+  after: Week after
+weekChart:
+  label: Tracked time per day
+  day: '{day}: {tracked}'
+  nothingOn: '{day}: nothing tracked'
+  weekTotal: Week total
+taskTotals:
+  heading: By task
+  removedTask: Removed task
+  nothingTracked: Nothing tracked in this week.
+dayProgress:
+  heading: Today
+  trackedOf: '{tracked} of {planned}'
+  progress: '{name} today'
+statistics:
+  empty: Nothing tracked yet. Time is tracked while a task runs, on its own or in a focus session.
+musicCommand:
+  added: '{name} added'
+  audioFileRemoved: '{file} deleted'
+  renamed: '{before} renamed to {name}'
+  fileRemoved: '{file} removed from {name}'
+  fileMoved: '{file} moved to place {place} in {name}'
+  filesAdded: '{n} file added to {name} | {n} files added to {name}'
+  notAudio: '{file} could not be read as audio'
+  removed: '{name} deleted'
+  removedLosing: '{name} deleted. {lost} now has no background sound. | {name} deleted. {lost} now have no background sound.'
+  timers: '{n} timer | {n} timers'
+  focusSessions: '{n} focus session | {n} focus sessions'
+  and: ' and '
+  soundChosen: '{name} plays {playlist} at {volume}%'
+  soundNone: '{name} plays no background sound'
+music:
+  playlists: Playlists
+  new: New
+  newName: 'Playlist {number}'
+  hint: A playlist is one or more of your own audio files. Add one here, then choose it on a timer, a task or a focus session.
+backgroundSound:
+  legend: Background sound
+  playlist: Playlist
+  none: None
+  volume: Volume
+  percent: '{percent}%'
+  noPlaylists: Make a playlist in Music to choose it here.
+soundControls:
+  label: 'Background sound of {name}'
+  previous: 'Previous file for {name}'
+  pause: 'Pause the sound of {name}'
+  resume: 'Resume the sound of {name}'
+  next: 'Next file for {name}'
+  volume: 'Volume of {name}'
+  showVolume: 'Show the volume of {name}'
+  noFileCanPlay: 'No file of {playlist} can play'
+playlistCard:
+  files: 'Files in {name}'
+  name: 'Name of {name}'
+  delete: 'Delete {name}'
+  removeFile: 'Remove {file} from {name}'
+  earlier: 'Move {file} earlier'
+  later: 'Move {file} later'
+  addFiles: 'Add files to {name}'
+  addFilesShort: Add files
+  chooser: 'Choose audio files for {name}'
+  noFiles: No files yet.
+  notUsed: Not used yet
+  usedBy: 'Used by {names}'
+alarmCommand:
+  switchedOff: '{name} switched off'
+  added: '{name} added'
+  saved: '{name} saved'
+  savedAndSwitchedOn: '{name} saved and switched on'
+  removed: '{name} removed'
+  switchedOn: '{name} switched on'
+alarm:
+  days:
+    weekdays: Weekdays
+    everyDay: Every day
+    weekends: Weekends
+    short:
+      sunday: Sun
+      monday: Mon
+      tuesday: Tue
+      wednesday: Wed
+      thursday: Thu
+      friday: Fri
+      saturday: Sat
+    once: 'Once, {date}'
+  ring: 'Ring {name}'
+  edit: 'Edit {name}'
+alarmDialog:
+  title:
+    new: New alarm
+    edit: Edit alarm
+  name: Name
+  save: Save
+  time: Time
+  repeatDays: Repeat days
+  rings: Rings
+  kind:
+    one-time: Once
+    repeating: Repeats
+  date: Date
+  ringSound: Ring sound
+  notification: System notification
+  notificationHint: Also show a message from the operating system when it rings.
+  error:
+    name: Give it a name.
+    repeatDays: Choose at least one day.
+    time: Choose a time.
+    date: Choose a date.
+    passed: This date and time have already passed.
+  cancel: Cancel
+  delete: 'Delete {name}'
+  deleteShort: Delete
+alarmList:
+  empty: No alarms yet. Choose New to add one.
+alarms:
+  allAlarms: All alarms
+  new: New
+  hint: Alarms ring while the browser is running. One missed while the browser was closed shows a quiet notification when it opens.
+alarmsToday:
+  heading: Alarms today
+focusSessions:
+  all: All focus sessions
+  new: New
+  empty: No focus sessions yet. Choose New to build one from your tasks.
+  back: Back to all focus sessions
+sessionCommand:
+  added: '{name} added'
+  saved: '{name} saved'
+  removed: '{name} removed'
+  start: '{name} started'
+  pause: '{name} paused'
+  resume: '{name} resumed'
+  skip: 'Break skipped in {name}'
+  endEarly: '{name} ended early'
+  moved: '{task} moved. Changed for this run only.'
+  sentToFront: '{task} sent to the front. Changed for this run only.'
+  taskAdded: '{task} added to {name}. Changed for this run only.'
+  taskMarkedDone: '{task} done; its steps are taken out of this run'
+  pin: '{name} pinned to the overlay'
+  unpin: '{name} unpinned from the overlay'
+focusSessionCard:
+  tag: Focus session
+  nothingLeft: Nothing left to do in this session.
+  progress: '{name} progress'
+  stepsWithBreaks: '{count} focus step of {step} | {count} focus steps of {step} with {break} breaks'
+  stepsWithNoBreaks: '{count} focus step of {step} | {count} focus steps of {step} with no breaks'
+focusSession:
+  endsAbout: 'Ends about {time}'
+  finishedAt: 'Finished at {time}'
+  delay: '{delay} later from pausing'
+  now:
+    focusStep: 'Focus: {task}'
+    pausedInFocusStep: 'Paused: {task}'
+    pausedInBreak: 'Paused in a break, next: {task}'
+    break: 'Break, next: {task}'
+  action:
+    start: 'Start {name}'
+    startShort: Start
+    edit: 'Edit {name}'
+    pause: 'Pause {name}'
+    pauseShort: Pause
+    resume: 'Resume {name}'
+    resumeShort: Resume
+    skip: 'Skip the break in {name}'
+    skipShort: Skip break
+    endEarly: 'End {name} early'
+    endEarlyShort: End early
+    open: 'Open {name}'
+    pin: 'Pin {name} to the overlay'
+focusSessionDetail:
+  part:
+    focusStep: Focus step
+    break: Break
+    paused: Paused
+  stepOf: 'Step {step} of {steps}'
+  markDone: 'Mark {task} done and end this focus step'
+focusSessionDialog:
+  title:
+    new: New focus session
+    edit: Edit focus session
+  name: Name
+  tasks: Tasks
+  left: '{left} left'
+  stepLength: Step length in minutes
+  breakLength: Break length in minutes
+  noBreaksHint: A break length of 0 means no breaks.
+  order: Order
+  orders:
+    oneAfterAnother: One after another
+    alternating: Alternating
+  pin: Pin to the overlay
+  pinHint: Show it on top of every web page.
+  save: Save
+  cancel: Cancel
+  delete: 'Delete {name}'
+  deleteShort: Delete
+  error:
+    name: Give it a name.
+    tasks: Choose at least one task.
+upNext:
+  label: Up next
+  empty: No more steps after this one.
+  taskToAdd: Task to add
+  add: Add its steps
+  earlier: 'Move step {number}, {task}, earlier'
+  later: 'Move step {number}, {task}, later'
+  toFront: 'Send step {number}, {task}, to the front'
+  markDone: 'Mark {task} done'
+overlay:
+  label: Pinned timers and focus sessions
+  collapse: Collapse the overlay
+  expand: 'Show the overlay, {count} pinned'
+  move: Move the overlay
+  title: Pinned
+overlaySettings:
+  heading: Overlay
+  shownOnPages: Show the overlay on web pages
+  shownOnPagesHint: Pinned timers and focus sessions show in a corner of every page.
+taskFilter:
+  label: Tasks shown
+  all: All tasks
+  removedTask: Removed task
+  removedTaskNumbered: Removed task {number}
+repeatDays:
+  heading: Repeat days
+  finishedOf: '{name}: {finished} of {count} repeat days finished'
+  day: '{day}: {tracked} of {planned}, {result}'
+  finished: finished
+  unfinished: unfinished
