@@ -7,11 +7,12 @@ import { recordRepeatDays, recordUnusedRepeatDays, type ComingBack, type RepeatD
 import type { DayOf } from '@/utils/time/calendar'
 import { recordSpan, type TrackedTime } from '../tracking/model/tracked-time'
 import type { RepeatDayResultStore, TrackedTimeStore } from '../tracking/ports'
-import { nextEndingAt, settle as settleSession, tasksInRun, withOnlyTasks, type Ending, type FocusSession } from '../session/model/focus-session'
+import { nextEndingAt, settle as settleSession, tasksInRun, withOnlyTasks, withTaskDone, type Ending, type FocusSession } from '../session/model/focus-session'
 import type { Chimer } from '../session/ports'
 import type { OwnerEvent } from '../music/model/playback'
-import type { TimersAndSessionsStore, Wake, WakeAt, WakeScheduler } from './ports'
+import type { TimersAndSessionsStore, ToolbarButton, Wake, WakeAt, WakeScheduler } from './ports'
 import { soundOwnerEventsBetween } from './sound-owner-events'
+import { toolbarBadgeAt } from './toolbar-badge'
 
 type Stored = Readonly<{ timers: readonly Timer[], sessions: readonly FocusSession[] }>
 
@@ -20,17 +21,19 @@ type Given = Stored & Readonly<{ usedInRun: ReadonlyMap<string, Named> }>
 
 /**
  * What a command leaves of the stored timers and focus sessions, and the spans of timers it ended. A field left out stays as it was.
+ * `doneInRun` is a task the change made done while the run of a focus session uses it: the runner takes the task's steps out of up next
+ * of that run and, when the current focus step is the task's, ends that step at once.
  * A change that refuses itself gives the refusal, and nothing it changed is saved. A ring, chime or comeback that settling found is still saved and given.
  */
-type Changed = Readonly<{ timers?: readonly Timer[], sessions?: readonly FocusSession[], ran?: readonly Ran[], refusal?: Refusal }>
+type Changed = Readonly<{ timers?: readonly Timer[], sessions?: readonly FocusSession[], ran?: readonly Ran[], doneInRun?: string, refusal?: Refusal }>
 
 /**
  * Runs each command in turn: loads the timers and focus sessions, brings back each repeating task whose repeat day has begun
  * since it used time or was done and that no focus session's run still uses, tracking the span it still ran without ringing, settles everything else that ran on until now,
- * applies the change,
+ * applies the change, taking a task it made done out of the run of the focus session that uses it,
  * saves, sets each wake the saved state needs that the wake scheduler does not have at that moment, cancels each other timer or focus session wake the scheduler has,
  * so a wake that a background which stopped never set or cancelled is set or cancelled by the next command, hands on what it did to the timers and focus sessions that own
- * background sounds, then rings and chimes for what ran out.
+ * background sounds, shows the toolbar badge for what it saved without waiting for it, then rings and chimes for what ran out.
  * Each task that came back leaves the results of the repeat days it leaves, and each repeating task the results of the repeat days that passed
  * without it being used or done.
  * Timers and sessions are saved together in one write, before tracked time and repeat day results, so a worker that stops between two saves
@@ -59,6 +62,8 @@ type CommandRunnerDependencies = Readonly<{
   dayOf: DayOf
   /** Hears what each command did to the timers and focus sessions that own background sounds, in the order the commands ran. Defaults to no one. */
   soundOwners?: (events: readonly OwnerEvent[]) => void
+  /** Shows the toolbar badge for what each command left. Defaults to no button. */
+  toolbarButton?: ToolbarButton
 }>
 
 function settleEverything({ timers, sessions }: Stored, now: Moment, dayOf: DayOf) {
@@ -118,13 +123,14 @@ export type Settled = ReturnType<typeof settleEverything>
 /** What a repeating task that comes back at the moment leaves behind. */
 function comingBackOf(timer: Timer, now: Moment, dayOf: DayOf): ComingBack {
   const since = usedOrDoneSince(timer) ?? now
-  const finishedAt = settleTimer(timer, now).timer.done?.at
+  const { done } = settleTimer(timer, now).timer
   return {
     taskId: timer.id,
     repeatDays: timer.repeatDays ?? [],
     plannedTime: timer.plannedTime,
     since: dayOf(since).day,
-    finishedOn: finishedAt === undefined ? null : dayOf(finishedAt).day
+    finishedOn: done === undefined ? null : dayOf(done.at).day,
+    skipped: done?.skipped === true
   }
 }
 
@@ -235,13 +241,15 @@ function wakesOf({ timers, sessions }: Stored): Map<string, WakeAt> {
   return wakes
 }
 
+const noButton: ToolbarButton = { showBadge: async () => {} }
+
 export function createCommandRunner(dependencies: CommandRunnerDependencies): RunCommand {
-  const { inTurn, store, trackedTimeStore, repeatDayResultStore, wakeScheduler, ringer, chimer, dayOf, soundOwners = () => {} } = dependencies
+  const { inTurn, store, trackedTimeStore, repeatDayResultStore, wakeScheduler, ringer, chimer, dayOf, soundOwners = () => {}, toolbarButton = noButton } = dependencies
   return (now, change, { everyWake = false } = {}) => inTurn(async () => {
     const loaded = await store.load()
     const settled = settleEverything(loaded, now, dayOf)
     const changed = change({ ...settled.stored, usedInRun: usedInRunOf(settled.stored.sessions) })
-    const outcome = changed.refusal === undefined ? checked(settled.stored, changed) : { refusal: changed.refusal }
+    const outcome = changed.refusal === undefined ? checked(settled.stored, withDoneTaskOutOfRun(settled.stored, changed, now)) : { refusal: changed.refusal }
     if ('refusal' in outcome) {
       if (settledSomethingDue(settled)) {
         await keep(loaded, settled, settled.stored, [], now, everyWake)
@@ -252,7 +260,7 @@ export function createCommandRunner(dependencies: CommandRunnerDependencies): Ru
     return null
   })
 
-  /** Saves what the command left, records the tracking, sets and cancels wakes, tells the sound owners, then rings and chimes for what ran out. */
+  /** Saves what the command left, records the tracking, sets and cancels wakes, tells the sound owners, shows the toolbar badge, then rings and chimes for what ran out. */
   async function keep(loaded: Stored, settled: Settled, after: Stored, changeRan: readonly Ran[], now: Moment, everyWake: boolean) {
     const stored = { trackedTime: await trackedTimeStore.load(), repeatDayResults: await repeatDayResultStore.load() }
     const tracking = recordTracking(stored, loaded.timers, [...settled.ran, ...changeRan], settled.cameBack, now, dayOf)
@@ -277,6 +285,7 @@ export function createCommandRunner(dependencies: CommandRunnerDependencies): Ru
     if (ownerEvents.length > 0) {
       soundOwners(ownerEvents)
     }
+    void toolbarButton.showBadge(toolbarBadgeAt(after, now))
     for (const timer of settled.rings) {
       await ringer.ring(timer)
     }
@@ -284,6 +293,16 @@ export function createCommandRunner(dependencies: CommandRunnerDependencies): Ru
       await chimer.chime(session, ending)
     }
   }
+}
+
+/** The change with the task it made done taken out of the run of the focus session that uses it. */
+function withDoneTaskOutOfRun(before: Stored, changed: Changed, now: Moment): Changed {
+  const { doneInRun } = changed
+  if (doneInRun === undefined) {
+    return changed
+  }
+  const sessions = (changed.sessions ?? before.sessions).map((session) => tasksInRun(session).has(doneInRun) ? withTaskDone(session, doneInRun, now) : session)
+  return { ...changed, sessions }
 }
 
 /** The timers and focus sessions the change leaves, each session keeping only stored tasks, or why the change is refused. */

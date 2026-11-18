@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/vue'
 import userEvent from '@testing-library/user-event'
 import { createAppI18n } from '@/infrastructure/plugins/setup-i18n'
+import { icons } from '@/ui/n-icon/icons'
 import { createTimer } from '../timer/model/timer'
 import { createFocusSession, pause, start, taskTimesAt, type FocusSession } from './model/focus-session'
 import RunningSessionChips from './running-session-chips.vue'
@@ -30,7 +31,25 @@ describe('the running focus session chips', () => {
   test('show each running focus session with what is left of its focus step or break, and no session that is paused or not started', () => {
     renderChips([morning, mail, later])
 
-    expect(screen.getAllByRole('listitem').map((chip) => chip.textContent)).toEqual(['Morning03:00'])
+    expect(screen.getAllByRole('listitem').map((chip) => chip.textContent)).toEqual(['Morning· Break03:00'])
+  })
+
+  test('show a session on a break with a cup and the word Break before what is left of the break, in the calm look of a break', () => {
+    const { container } = renderChips([morning])
+
+    const chip = screen.getByRole('listitem')
+    expect(chip).toHaveTextContent(/^Morning\s*·\s*Break\s*03:00$/)
+    expect(chip).toHaveClass('running-session-chip--break')
+    expect(container.querySelector('svg path')).toHaveAttribute('d', icons.cup)
+  })
+
+  test('show a session in a focus step with the focus target, no word Break and not the look of a break', () => {
+    const { container } = renderChips([startedAgo(sessionOf('work', 'Work', 'answer-email'), 10 * MINUTE)])
+
+    const chip = screen.getByRole('listitem')
+    expect(chip).toHaveTextContent(/^Work\s*15:00$/)
+    expect(chip).not.toHaveClass('running-session-chip--break')
+    expect(container.querySelector('svg path')).toHaveAttribute('d', icons.target)
   })
 
   test('ask to pause the session whose pause button is chosen', async () => {

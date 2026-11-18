@@ -16,7 +16,7 @@ const pasta = { id: 'pasta', name: 'Pasta', kind: 'timer', plannedTime: 10 * MIN
 async function startBackground() {
   vi.resetModules()
   const { runEngines } = await import('./run-engines')
-  runEngines()
+  await runEngines()
 }
 
 /**

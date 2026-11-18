@@ -29,6 +29,8 @@ export function whyRefused(refusal: Refusal, t: Translate): string {
     return t('refusal.runEnded', {})
   case 'no time left':
     return t('refusal.noTimeLeft', { task: refusal.task.name })
+  case 'not repeating today':
+    return t('refusal.notRepeatingToday', { task: refusal.task.name })
   case 'audio file in use':
     return t('refusal.audioFileInUse', { users: new Intl.ListFormat('en', { type: 'conjunction' }).format(refusal.usedBy.map((user) => userText(user, t))) })
   default:

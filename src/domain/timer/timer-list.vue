@@ -20,6 +20,7 @@ const emit = defineEmits<{
   reset: [timer: Timer]
   markDone: [timer: Timer]
   undoDone: [timer: Timer]
+  skipToday: [timer: Timer]
   edit: [timer: Timer]
   pin: [timer: Timer]
   unpin: [timer: Timer]
@@ -52,6 +53,7 @@ const groups = computed(() => [
             @reset="emit('reset', timer)"
             @mark-done="emit('markDone', timer)"
             @undo-done="emit('undoDone', timer)"
+            @skip-today="emit('skipToday', timer)"
             @edit="emit('edit', timer)"
             @pin="emit('pin', timer)"
             @unpin="emit('unpin', timer)"

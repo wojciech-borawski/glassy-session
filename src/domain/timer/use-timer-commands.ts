@@ -30,6 +30,11 @@ export function useTimerCommands() {
     pin: (timer: Timer) => run({ type: 'pin', timerId: timer.id }, t('timerCommand.pinned', { name: timer.name })),
     unpin: (timer: Timer) => run({ type: 'unpin', timerId: timer.id }, t('timerCommand.unpinned', { name: timer.name })),
     markDone: (timer: Timer) => run({ type: 'markDone', timerId: timer.id }, t('timerCommand.markedDone', { name: timer.name })),
-    undoDone: (timer: Timer) => run({ type: 'undoDone', timerId: timer.id }, t('timerCommand.undoneDone', { name: timer.name }))
+    undoDone: (timer: Timer) => run({ type: 'undoDone', timerId: timer.id }, t('timerCommand.undoneDone', { name: timer.name })),
+    /** Skips a repeating task today. Given the focus session whose run uses the task, the snackbar says the task is taken out of it. */
+    skipToday: (timer: Timer, inSession?: string) => run(
+      { type: 'skipToday', timerId: timer.id },
+      inSession === undefined ? t('timerCommand.skippedToday', { name: timer.name }) : t('timerCommand.skippedTodayInSession', { name: timer.name, session: inSession })
+    )
   }
 }

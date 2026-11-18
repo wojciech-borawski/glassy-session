@@ -42,6 +42,10 @@ const lastTimes = computed(() => {
   return lastTimes
 })
 
+function skipToday(task: Timer) {
+  void commands.skipToday(task, asOfNow.value.usedInRun.get(task.id)?.name)
+}
+
 function openStatistics(task: Timer) {
   dialogOpen.value = false
   void router.push({ path: '/statistics', query: { task: task.id } })
@@ -81,7 +85,7 @@ async function save({ kind, details }: { kind: Timer['kind'], details: TimerDeta
       <h2 :id="headingId" class="timers-and-tasks__heading">{{ heading }}</h2>
       <NButton ref="newButton" icon="plus" @click="openDialog(null)">{{ t('timersAndTasks.new') }}</NButton>
     </header>
-    <TimerList :timers="shown" :now="now" :used-in-run="asOfNow.usedInRun" :last-times="lastTimes" @start="commands.start" @pause="commands.pause" @reset="commands.reset" @mark-done="commands.markDone" @undo-done="commands.undoDone" @edit="openDialog" @pin="commands.pin" @unpin="commands.unpin" @statistics="openStatistics">
+    <TimerList :timers="shown" :now="now" :used-in-run="asOfNow.usedInRun" :last-times="lastTimes" @start="commands.start" @pause="commands.pause" @reset="commands.reset" @mark-done="commands.markDone" @undo-done="commands.undoDone" @skip-today="skipToday" @edit="openDialog" @pin="commands.pin" @unpin="commands.unpin" @statistics="openStatistics">
       <template #sound="{ timer }">
         <SoundControls :owner="{ of: 'timer', id: timer.id }" :name="timer.name" />
       </template>

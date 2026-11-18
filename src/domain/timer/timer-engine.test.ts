@@ -33,7 +33,7 @@ function setup() {
   const run = createCommandRunner({
     inTurn: createCommandQueue(), store: createMemoryTimersAndSessionsStore(timerStore, createMemorySessionStore()), trackedTimeStore, repeatDayResultStore, wakeScheduler, ringer, chimer: createMemoryChimer(), dayOf
   })
-  const engine = createTimerEngine(run)
+  const engine = createTimerEngine(run, dayOf)
   async function storedTimer(id: string) {
     const timer = (await timerStore.load()).find((stored) => stored.id === id)
     if (timer === undefined) {
@@ -47,7 +47,7 @@ function setup() {
   async function storedIds() {
     return (await timerStore.load()).map((timer) => timer.id)
   }
-  return { engine, engineOnTheSameRunner: createTimerEngine(run), storedTimer, storedIds, trackedOnDay, repeatDayResults: () => repeatDayResultStore.load(), wakeScheduler, wakes: wakeScheduler.wakes, wakesSet: wakeScheduler.set, rang: ringer.rang }
+  return { engine, engineOnTheSameRunner: createTimerEngine(run, dayOf), storedTimer, storedIds, trackedOnDay, repeatDayResults: () => repeatDayResultStore.load(), wakeScheduler, wakes: wakeScheduler.wakes, wakesSet: wakeScheduler.set, rang: ringer.rang }
 }
 
 const writeReport = { id: 'write-report', name: 'Write report', kind: 'task', plannedTime: 25 * MINUTE, appearance: { colour: 'blue' } } as const
@@ -600,6 +600,83 @@ describe('tasks over days', () => {
   })
 })
 
+describe('skipping a repeating task today', () => {
+  const reading = { id: 'read', name: 'Read', kind: 'task', plannedTime: 30 * MINUTE, appearance: { colour: 'green' }, repeatDays: [2, 4] } as const
+
+  test('a running repeating task skipped on its repeat day stops, is done for the day, tracks the span it ran and cancels its wake', async () => {
+    const { engine, storedTimer, trackedOnDay, wakes } = setup()
+    await engine.add(reading, NINE)
+    await engine.start('read', NINE)
+
+    expect(await engine.skipToday('read', NINE + 10 * MINUTE)).toBeNull()
+
+    const timer = await storedTimer('read')
+    expect(runStateAt(timer, NINE + HOUR)).toBe('finished')
+    expect(await trackedOnDay('read', '2026-11-17')).toBe(10 * MINUTE)
+    expect(wakes.has('timer:read')).toBe(false)
+  })
+
+  test('a repeating task skipped on Tuesday keeps Tuesday as skipped, not finished, with the time it ran, once it comes back on Thursday', async () => {
+    const { engine, repeatDayResults } = setup()
+    await engine.add(reading, NINE)
+    await engine.start('read', NINE)
+    await engine.skipToday('read', NINE + 10 * MINUTE)
+
+    await engine.settleAll(NINE + 2 * DAY)
+
+    expect(await repeatDayResults()).toEqual({ read: { '2026-11-17': { planned: 30 * MINUTE, tracked: 10 * MINUTE, finished: false, skipped: true } } })
+  })
+
+  test('skipping a one-time task today is refused, naming the task as not repeating today, and leaves it as it was', async () => {
+    const { engine, storedTimer } = setup()
+    await engine.add(writeReport, NINE)
+
+    expect(await engine.skipToday('write-report', NINE)).toEqual({ reason: 'not repeating today', task: { id: 'write-report', name: 'Write report' } })
+    expect(runStateAt(await storedTimer('write-report'), NINE)).toBe('idle')
+  })
+
+  test('skipping a plain timer today is refused, naming it as not repeating today', async () => {
+    const { engine } = setup()
+    await engine.add(tea, NINE)
+
+    expect(await engine.skipToday('tea', NINE)).toEqual({ reason: 'not repeating today', task: { id: 'tea', name: 'Tea' } })
+  })
+
+  test('skipping a removed task today is refused as already removed', async () => {
+    const { engine } = setup()
+    await engine.add(reading, NINE)
+    await engine.remove('read', NINE)
+
+    expect(await engine.skipToday('read', NINE + MINUTE)).toEqual({ reason: 'already removed' })
+  })
+
+  test('skipping a repeating task on a day that is not one of its repeat days is refused and leaves it as it was', async () => {
+    const { engine, storedTimer } = setup()
+    await engine.add(reading, NINE)
+    await engine.start('read', NINE + DAY)
+
+    expect(await engine.skipToday('read', NINE + DAY + MINUTE)).toEqual({ reason: 'not repeating today', task: { id: 'read', name: 'Read' } })
+    expect(runStateAt(await storedTimer('read'), NINE + DAY + MINUTE)).toBe('running')
+  })
+
+  test('skipping in the last second of Tuesday skips Tuesday, since the repeat day is the local day of the moment the command runs at', async () => {
+    const { engine, repeatDayResults } = setup()
+    await engine.add(reading, NINE)
+
+    expect(await engine.skipToday('read', Date.UTC(2026, 10, 17, 23, 59, 59))).toBeNull()
+
+    await engine.settleAll(NINE + 2 * DAY)
+    expect(await repeatDayResults()).toEqual({ read: { '2026-11-17': { planned: 30 * MINUTE, tracked: 0, finished: false, skipped: true } } })
+  })
+
+  test('skipping in the first second of Wednesday is refused, since Wednesday is not one of its repeat days', async () => {
+    const { engine } = setup()
+    await engine.add(reading, NINE)
+
+    expect(await engine.skipToday('read', Date.UTC(2026, 10, 18, 0, 0, 1))).toEqual({ reason: 'not repeating today', task: { id: 'read', name: 'Read' } })
+  })
+})
+
 describe('what the sound owners did', () => {
   test('each command hands on what it did to the sound owners, a timer that ran out while nobody looked included', async () => {
     const heard: unknown[] = []
@@ -614,7 +691,7 @@ describe('what the sound owners did', () => {
       dayOf,
       soundOwners: (events) => heard.push(events)
     })
-    const engine = createTimerEngine(run)
+    const engine = createTimerEngine(run, dayOf)
     await engine.add(tea, NINE)
     await engine.add({ ...tea, id: 'pasta', name: 'Pasta', plannedTime: 10 * MINUTE }, NINE)
     await engine.start('tea', NINE)

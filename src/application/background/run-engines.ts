@@ -29,6 +29,7 @@ import { createBrowserRinger } from '@/infrastructure/browser/ringer'
 import { createBrowserSoundSettingsStore } from '@/infrastructure/browser/sound-settings-store'
 import { createBrowserTimerStore } from '@/infrastructure/browser/timer-store'
 import { createBrowserTimersAndSessionsStore } from '@/infrastructure/browser/timers-and-sessions-store'
+import { createBrowserToolbarButton } from '@/infrastructure/browser/toolbar-button'
 import { createBrowserRepeatDayResultStore, createBrowserTrackedTimeStore } from '@/infrastructure/browser/tracked-time-store'
 import { createBrowserWakeScheduler } from '@/infrastructure/browser/wake-scheduler'
 import type { Moment } from '@/utils/time/units'
@@ -65,10 +66,11 @@ const runner = createCommandRunner({
   ringer: createBrowserRinger(sounding),
   chimer: createBrowserChimer(sounding),
   dayOf: localDayOf,
-  soundOwners: (events) => void playback.ownersChanged(events)
+  soundOwners: (events) => void playback.ownersChanged(events),
+  toolbarButton: createBrowserToolbarButton()
 })
 
-const timers = createTimerEngine(runner)
+const timers = createTimerEngine(runner, localDayOf)
 
 const sessions = createSessionEngine(runner)
 
@@ -145,8 +147,11 @@ async function settleEverythingAtStart() {
   await alarms.catchUp(now())
 }
 
-/** Registers the background's listeners. Call it synchronously when the background starts. */
-export function runEngines() {
+/**
+ * Registers the background's listeners. Call it synchronously when the background starts. At every start it settles everything up to now,
+ * which shows the toolbar badge, and the promise it gives ends once that is done.
+ */
+export function runEngines(): Promise<void> {
   browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const running = runCommand(message)
     if (running === null) {
@@ -158,9 +163,11 @@ export function runEngines() {
   sounding.player.onFileEnded((fileId) => void playback.fileEnded(fileId))
   sounding.player.onFileCannotPlay((fileId) => void playback.fileCannotPlay(fileId))
   sounding.player.onFilePlace((fileId, at) => void playback.placeReported(fileId, at))
-  void playback.restore(settleEverything)
+  const settledAtStart = settleEverything()
+  void playback.restore(() => settledAtStart)
   wakeScheduler.onWake(settleEverything)
   watchAudioFilesLetGo((fileIds) => void music.forgetUnusedFiles(fileIds))
   browser.runtime.onStartup.addListener(settleEverythingAtStart)
   browser.runtime.onInstalled.addListener(settleEverythingAtStart)
+  return settledAtStart
 }

@@ -69,7 +69,7 @@ export function createMemoryBackground({ now, timers = [], sessions = [], tracke
       soundFollowed = memoryMusic.ownersChanged(events)
     }
   })
-  const timerEngine = createTimerEngine(run)
+  const timerEngine = createTimerEngine(run, localDayOf)
   const sessionEngine = createSessionEngine(run)
   const storedTimers = shallowRef(timers)
   const storedSessions = shallowRef(sessions)

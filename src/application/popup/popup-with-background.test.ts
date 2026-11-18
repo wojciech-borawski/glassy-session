@@ -14,11 +14,11 @@ const NINE = new Date(2026, 10, 17, 9).getTime()
 
 const tea = { id: 'tea', name: 'Tea', kind: 'timer', plannedTime: 4 * MINUTE, appearance: { colour: 'gold' } } as const
 
-beforeEach(() => {
+beforeEach(async () => {
   fakeBrowser.reset()
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(NINE)
-  runEngines()
+  await runEngines()
 })
 
 afterEach(() => {

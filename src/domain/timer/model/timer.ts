@@ -25,8 +25,8 @@ export type Timer = Readonly<{
   runningSince: Moment | null
   /** When the task first used time since it last had all of its planned time. A repeating task comes back on the next repeat day after it. */
   usedSince?: Moment
-  /** When a task became done, and the remaining time it had just before, which undoing done gives back. A timer is never done. */
-  done?: Readonly<{ at: Moment, remainingTimeBefore: Duration }>
+  /** When a task became done, and the remaining time it had just before, which undoing done gives back. A timer is never done. A repeating task skipped today says so. */
+  done?: Readonly<{ at: Moment, remainingTimeBefore: Duration, skipped?: true }>
   /** Whether the timer shows in the overlay on every page. A timer without it is not pinned. */
   pinned?: boolean
 }>
@@ -155,7 +155,8 @@ function sameDays(one: readonly Weekday[] | undefined, other: readonly Weekday[]
   return one?.length === other?.length && (one ?? []).every((day) => other?.includes(day))
 }
 
-export function markDone(timer: Timer, now: Moment): Transition {
+/** The task done at the moment, stopped first, and skipped when it is. A task that is already done stays done as it was. */
+function doneAt(timer: Timer, now: Moment, skipped: boolean): Transition {
   if (timer.kind !== 'task') {
     throw new RangeError('Only a task can be done')
   }
@@ -164,7 +165,20 @@ export function markDone(timer: Timer, now: Moment): Transition {
     return paused
   }
   const remainingTimeBefore = paused.timer.remainingTime
-  return { timer: { ...paused.timer, remainingTime: 0, done: { at: now, remainingTimeBefore } }, ran: paused.ran }
+  const done = skipped ? { at: now, remainingTimeBefore, skipped: true } as const : { at: now, remainingTimeBefore }
+  return { timer: { ...paused.timer, remainingTime: 0, done }, ran: paused.ran }
+}
+
+export function markDone(timer: Timer, now: Moment): Transition {
+  return doneAt(timer, now, false)
+}
+
+/** Marks a repeating task done for the day as skipped. A task that is already done stays as it was. */
+export function skipToday(timer: Timer, now: Moment): Transition {
+  if (timer.repeatDays === undefined) {
+    throw new RangeError('Only a repeating task can be skipped today')
+  }
+  return doneAt(timer, now, true)
 }
 
 export function undoDone(timer: Timer): Transition {
@@ -220,10 +234,15 @@ export function comeBack(timer: Timer, now: Moment, dayOf: DayOf): Transition {
   return { timer: { ...timer, remainingTime: timer.plannedTime, runningSince: null, usedSince: undefined, done: undefined }, ran }
 }
 
+/** Whether the timer is a repeating task and the local day of the moment is one of its repeat days. */
+export function repeatsToday(timer: Timer, now: Moment, dayOf: DayOf): boolean {
+  return timer.repeatDays?.includes(weekdayOf(dayOf(now).day)) ?? false
+}
+
 /** Whether the timer or task belongs on Today on the local day of the moment, as it is on that day. */
 export function isForToday(timer: Timer, now: Moment, dayOf: DayOf): boolean {
   if (timer.repeatDays !== undefined) {
-    return timer.repeatDays.includes(weekdayOf(dayOf(now).day))
+    return repeatsToday(timer, now, dayOf)
   }
   const { done } = settle(timer, now).timer
   return done === undefined || dayOf(done.at).day === dayOf(now).day

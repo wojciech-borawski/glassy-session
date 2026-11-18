@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/vue'
 import userEvent from '@testing-library/user-event'
 import { createAppI18n } from '@/infrastructure/plugins/setup-i18n'
+import { icons } from '@/ui/n-icon/icons'
 import { createTimer } from '../timer/model/timer'
 import { createFocusSession, pause, start, taskTimesAt, type FocusSession } from './model/focus-session'
 import PinnedSession from './pinned-session.vue'
@@ -38,6 +39,54 @@ describe('a pinned focus session in the overlay', () => {
     await userEvent.click(within(row).getByRole('button', { name: 'Pause Morning' }))
 
     expect(emitted('pause')).toHaveLength(1)
+  })
+
+  test('marks the row of a session running in a break as running', () => {
+    renderRow(startedAgo(27 * MINUTE))
+
+    expect(screen.getByRole('listitem', { name: 'Morning' })).toHaveClass('n-list-row--running')
+  })
+
+  test('marks the row of a session running in a break with the calm look of a break, not the accent of a focus step', () => {
+    renderRow(startedAgo(27 * MINUTE))
+
+    expect(screen.getByRole('listitem', { name: 'Morning' })).toHaveClass('n-list-row--calm')
+  })
+
+  test('shows a cup instead of the focus target while on a break', () => {
+    const { container } = renderRow(startedAgo(27 * MINUTE))
+
+    expect(container.querySelector('svg path')).toHaveAttribute('d', icons.cup)
+  })
+
+  test('paused in a break, keeps the look of a paused row and shows the cup', () => {
+    const { container } = renderRow(pause(startedAgo(27 * MINUTE), NINE - MINUTE).session)
+
+    const row = screen.getByRole('listitem', { name: 'Morning' })
+    expect(row).not.toHaveClass('n-list-row--running')
+    expect(within(row).getByText('Paused in a break, next: Write report')).toBeInTheDocument()
+    expect(container.querySelector('svg path')).toHaveAttribute('d', icons.cup)
+  })
+
+  test('marks the row of a session running in a focus step as running, in the accent and with the focus target', () => {
+    const { container } = renderRow(startedAgo(10 * MINUTE))
+
+    const row = screen.getByRole('listitem', { name: 'Morning' })
+    expect(row).toHaveClass('n-list-row--running')
+    expect(row).not.toHaveClass('n-list-row--calm')
+    expect(container.querySelector('svg path')).toHaveAttribute('d', icons.target)
+  })
+
+  test('does not mark the row of a paused session as running', () => {
+    renderRow(pause(startedAgo(10 * MINUTE), NINE - 5 * MINUTE).session)
+
+    expect(screen.getByRole('listitem', { name: 'Morning' })).not.toHaveClass('n-list-row--running')
+  })
+
+  test('does not mark the row of a session that has not started as running', () => {
+    renderRow(morning)
+
+    expect(screen.getByRole('listitem', { name: 'Morning' })).not.toHaveClass('n-list-row--running')
   })
 
   test('asks to resume a paused session, and says where it is paused', async () => {

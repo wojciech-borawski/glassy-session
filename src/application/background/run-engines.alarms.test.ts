@@ -11,11 +11,11 @@ const TUESDAY_NINE = new Date(2026, 10, 17, 9).getTime()
 
 const wakeUp = { id: 'wake-up', name: 'Wake up', time: 7 * HOUR + 30 * MINUTE, days: { kind: 'repeating', repeatDays: [1, 2, 3, 4, 5] }, sendsNotification: true } as const
 
-beforeEach(() => {
+beforeEach(async () => {
   fakeBrowser.reset()
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(TUESDAY_NINE)
-  runEngines()
+  await runEngines()
 })
 
 afterEach(() => {

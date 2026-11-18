@@ -60,15 +60,15 @@ const sampleTrackedTime = {
   gym: { '2026-11-09': 60 * MINUTE, '2026-11-11': 60 * MINUTE, '2026-11-13': 20 * MINUTE, '2026-11-16': 40 * MINUTE }
 }
 
-/** How the repeat days of Gym went: two of three finished in the week before, and 40 of its 60 minutes this Monday. */
+/** How the repeat days of Gym went: two of three finished in the week before, and 40 of its 60 minutes this Monday before it was skipped. */
 const sampleRepeatDayResults = {
   gym: {
     '2026-11-09': { planned: 60 * MINUTE, tracked: 60 * MINUTE, finished: true },
     '2026-11-11': { planned: 60 * MINUTE, tracked: 60 * MINUTE, finished: true },
     '2026-11-13': { planned: 60 * MINUTE, tracked: 20 * MINUTE, finished: false },
-    '2026-11-16': { planned: 60 * MINUTE, tracked: 40 * MINUTE, finished: false }
+    '2026-11-16': { planned: 60 * MINUTE, tracked: 40 * MINUTE, finished: false, skipped: true }
   }
-}
+} as const
 const HOUR = 60 * MINUTE
 const workdays = { kind: 'repeating', repeatDays: [1, 2, 3, 4, 5] } as const
 

@@ -10,11 +10,11 @@ import App from './app.vue'
 /** Tuesday 17 November 2026, 09:00 on the local clock. */
 const TUESDAY_NINE = new Date(2026, 10, 17, 9).getTime()
 
-beforeEach(() => {
+beforeEach(async () => {
   fakeBrowser.reset()
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(TUESDAY_NINE)
-  runEngines()
+  await runEngines()
 })
 
 afterEach(() => {

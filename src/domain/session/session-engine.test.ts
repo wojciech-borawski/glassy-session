@@ -12,6 +12,7 @@ import { createTimerEngine } from '../timer/timer-engine'
 import type { DayOf } from '@/utils/time/calendar'
 import { trackedOn } from '../tracking/model/tracked-time'
 import { createCommandRunner } from '../command/command-runner'
+import type { TimersAndSessionsStore } from '../command/ports'
 import { isPinned, progressAt, tasksInRun } from './model/focus-session'
 import { createSessionEngine, type SessionEngine } from './session-engine'
 
@@ -47,9 +48,12 @@ async function setup() {
   const wakeScheduler = createMemoryWakeScheduler()
   const chimer = createMemoryChimer()
   const ringer = createMemoryRinger()
-  const run = createCommandRunner({ inTurn: createCommandQueue(), store: createMemoryTimersAndSessionsStore(timerStore, sessionStore), trackedTimeStore, repeatDayResultStore: createMemoryRepeatDayResultStore(), wakeScheduler, ringer, chimer, dayOf })
+  const store = createMemoryTimersAndSessionsStore(timerStore, sessionStore)
+  const saves: Parameters<TimersAndSessionsStore['save']>[0][] = []
+  const recordingStore: TimersAndSessionsStore = { load: store.load, save: (saved) => { saves.push(saved); return store.save(saved) } }
+  const run = createCommandRunner({ inTurn: createCommandQueue(), store: recordingStore, trackedTimeStore, repeatDayResultStore: createMemoryRepeatDayResultStore(), wakeScheduler, ringer, chimer, dayOf })
   const sessions = createSessionEngine(run)
-  const timers = createTimerEngine(run)
+  const timers = createTimerEngine(run, dayOf)
   await timerStore.save([createTimer(writeReport), createTimer(answerEmail), createTimer(tea)])
   async function storedTimer(id: string) {
     const timer = (await timerStore.load()).find((stored) => stored.id === id)
@@ -67,7 +71,7 @@ async function setup() {
   }
   return { sessions, timers, storedSession, storedTimer, storedSessions: () => sessionStore.load(),
     trackedOnDay: async (taskId: string, day: string) => trackedOn(await trackedTimeStore.load(), taskId, day),
-    wakes: wakeScheduler.wakes, chimed: chimer.chimed, rang: ringer.rang }
+    wakes: wakeScheduler.wakes, chimed: chimer.chimed, rang: ringer.rang, saves }
 }
 
 type Engines = Pick<Awaited<ReturnType<typeof setup>>, 'sessions' | 'timers'>
@@ -697,6 +701,78 @@ describe('the session engine', () => {
     expect(await storedSessions()).toEqual(before)
     expect((await storedTimer('answer-email')).done).toBeUndefined()
     expect(wakes.size).toBe(0)
+  })
+})
+
+describe('skipping today a repeating task that the run of a focus session uses', () => {
+  /** Morning, with write report repeating on Tuesdays, the day of NINE. */
+  async function morningWithRepeatingReport() {
+    const engines = await setup()
+    await engines.timers.change('write-report', { name: writeReport.name, plannedTime: writeReport.plannedTime, appearance: writeReport.appearance, repeatDays: [2] }, NINE)
+    await engines.sessions.add(morning, NINE)
+    await engines.sessions.start('morning', NINE)
+    return engines
+  }
+
+  test('skipping the task of the current focus step ends that step at once, so its break starts, takes its later steps out of up next and keeps the saved plan', async () => {
+    const { timers, storedSession, storedTimer, trackedOnDay, wakes } = await morningWithRepeatingReport()
+    const saved = (await storedSession('morning')).plan
+
+    expect(await timers.skipToday('write-report', NINE + 10 * MINUTE)).toBeNull()
+
+    expect((await storedTimer('write-report')).done).toEqual({ at: NINE + 10 * MINUTE, remainingTimeBefore: 40 * MINUTE, skipped: true })
+    expect(await trackedOnDay('write-report', '2026-11-17')).toBe(10 * MINUTE)
+    const session = await storedSession('morning')
+    expect(session.run?.plan.map(({ taskId }) => taskId)).toEqual(['write-report', 'answer-email', 'answer-email'])
+    expect(progressAt(session, NINE + 10 * MINUTE)).toMatchObject({ state: 'break', currentStep: 0, remainingTime: 5 * MINUTE })
+    expect(wakes.get('focus session:morning')).toBe(NINE + 15 * MINUTE)
+    expect(session.plan).toEqual(saved)
+  })
+
+  test('skipping saves the skipped task and the run it leaves in one write', async () => {
+    const { timers, saves } = await morningWithRepeatingReport()
+    const savesBefore = saves.length
+
+    await timers.skipToday('write-report', NINE + 10 * MINUTE)
+
+    expect(saves).toHaveLength(savesBefore + 1)
+    const saved = saves.at(-1)
+    expect(saved?.timers.find(({ id }) => id === 'write-report')?.done?.skipped).toBe(true)
+    expect(saved?.sessions.find(({ id }) => id === 'morning')?.run?.plan.map(({ taskId }) => taskId)).toEqual(['write-report', 'answer-email', 'answer-email'])
+  })
+
+  test('skipping a task whose steps are only up next takes them out of up next and leaves the current focus step running', async () => {
+    const { timers, sessions, storedSession, storedTimer } = await setup()
+    await timers.change('answer-email', { name: answerEmail.name, plannedTime: answerEmail.plannedTime, appearance: answerEmail.appearance, repeatDays: [2] }, NINE)
+    await sessions.add(morning, NINE)
+    await sessions.start('morning', NINE)
+
+    expect(await timers.skipToday('answer-email', NINE + 10 * MINUTE)).toBeNull()
+
+    expect((await storedTimer('answer-email')).done).toEqual({ at: NINE + 10 * MINUTE, remainingTimeBefore: 30 * MINUTE, skipped: true })
+    const session = await storedSession('morning')
+    expect(session.run?.plan.map(({ taskId }) => taskId)).toEqual(['write-report', 'write-report'])
+    expect(progressAt(session, NINE + 10 * MINUTE)).toMatchObject({ state: 'focus step', currentStep: 0, remainingTime: 15 * MINUTE })
+  })
+
+  test('skipping the task of the current focus step of a paused run ends that step and leaves the break paused, keeping the delay', async () => {
+    const { timers, sessions, storedSession, storedTimer } = await morningWithRepeatingReport()
+    await sessions.pause('morning', NINE + 10 * MINUTE)
+
+    expect(await timers.skipToday('write-report', NINE + 20 * MINUTE)).toBeNull()
+
+    expect((await storedTimer('write-report')).done).toEqual({ at: NINE + 20 * MINUTE, remainingTimeBefore: 40 * MINUTE, skipped: true })
+    const session = await storedSession('morning')
+    expect(session.run?.plan.map(({ taskId }) => taskId)).toEqual(['write-report', 'answer-email', 'answer-email'])
+    expect(progressAt(session, NINE + 20 * MINUTE)).toMatchObject({ state: 'paused', pausedIn: 'break', remainingTime: 5 * MINUTE, delay: 10 * MINUTE })
+  })
+
+  test('undoing done on a skipped task is refused while the run goes on, naming the session, and the task stays skipped', async () => {
+    const { timers, storedTimer } = await morningWithRepeatingReport()
+    await timers.skipToday('write-report', NINE + 10 * MINUTE)
+
+    expect(await timers.undoDone('write-report', NINE + 20 * MINUTE)).toEqual({ reason: 'task in use', task: { id: 'write-report', name: 'Write report' }, usedIn: { id: 'morning', name: 'Morning' } })
+    expect((await storedTimer('write-report')).done?.skipped).toBe(true)
   })
 })
 

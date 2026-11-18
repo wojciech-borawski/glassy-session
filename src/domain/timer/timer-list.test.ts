@@ -70,6 +70,15 @@ describe('the timer list', () => {
     expect(emitted()).toMatchObject({ markDone: [[readMail]], undoDone: [[doneReport]] })
   })
 
+  test('asks to skip a repeating task today with the task of that card', async () => {
+    const reading = createTimer({ id: 'read', name: 'Read', kind: 'task', plannedTime: 30 * MINUTE, appearance: { colour: 'green' }, repeatDays: [2] })
+    const { emitted } = renderList([readMail, reading], new Date(2026, 10, 17, 9).getTime())
+
+    await userEvent.click(screen.getByRole('button', { name: 'Skip Read today' }))
+
+    expect(emitted('skipToday')).toEqual([[reading]])
+  })
+
   test('asks to pin or unpin with the timer of that card', async () => {
     const pinnedTea = pin(tea).timer
     const { emitted } = renderList([readMail, pinnedTea])

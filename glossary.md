@@ -11,7 +11,7 @@ A saved, named countdown with a planned time. When it runs out, it rings.
 _Avoid_: Clock, counter, stopwatch
 
 **Task**:
-A timer that stands for work. Its time is tracked, it can be done, it can repeat, and it can go into a focus session. While the run of a focus session uses it, its own card says it is in that session, shows the time the run has left it, and offers no Start, Reset, Mark done or Undo done.
+A timer that stands for work. Its time is tracked, it can be done, it can repeat, and it can go into a focus session. While the run of a focus session uses it, its own card says it is in that session, shows the time the run has left it, and offers no Start, Reset, Mark done or Undo done, only Skip today for a repeating task on one of its repeat days.
 _Avoid_: Job, to-do, work timer
 
 **Planned time**:
@@ -127,11 +127,11 @@ A switched on alarm has a wake as well, at its next ring, and an alarm shares no
 _Avoid_: Alarm, tick, timeout
 
 **Timer command**:
-A request from the popup or the overlay asking the background to add, change, start, pause, reset, pin, unpin or remove a timer, or to mark a task done or undo done. Changing a timer sets its name, description, planned time, appearance, ring sound and pin, and for a task its repeat days. A change that says nothing about the pin keeps it as it was, and one that says nothing about the ring sound rings with the bell. A timer's kind stays as it was added, since changing it would leave its tracked time without a task. The background is the only part that changes timers, and it ignores any message that is neither a timer command nor a focus session command. A command that would use a task in two places is refused, and so is removing, resetting, marking done or undoing done a task that the run of a focus session uses, running or paused, naming that session.
+A request from the popup or the overlay asking the background to add, change, start, pause, reset, pin, unpin or remove a timer, to mark a task done or undo done, or to skip a repeating task today. Changing a timer sets its name, description, planned time, appearance, ring sound and pin, and for a task its repeat days. A change that says nothing about the pin keeps it as it was, and one that says nothing about the ring sound rings with the bell. A timer's kind stays as it was added, since changing it would leave its tracked time without a task. The background is the only part that changes timers, and it ignores any message that is neither a timer command nor a focus session command. A command that would use a task in two places is refused, and so is removing, resetting, marking done or undoing done a task that the run of a focus session uses, running or paused, naming that session.
 _Avoid_: Action, event, request
 
 **Refusal**:
-The answer to a command that changed nothing, saying why. A task in use names the task and the focus session it is in, running or paused, or says it already runs on its own. A command that could not run at all answers with what went wrong. A command for a timer, a focus session or an alarm that no longer exists, or that names a task that no longer exists, says it was already removed. Starting a timer that already runs says so, and starting a finished timer, or a focus session whose tasks have no time left, names the task with no time left. A refused command still rings, chimes and brings back what was due. Switching on a one-time alarm whose moment has passed says so. A change to up next by a step that has already become the current step or a past one names that step and its task, and a change to up next of a focus session whose run has ended says the run has ended. Adding to up next the steps of a task with no time left names the task. A refused command never answers as if it had worked.
+The answer to a command that changed nothing, saying why. A task in use names the task and the focus session it is in, running or paused, or says it already runs on its own. A command that could not run at all answers with what went wrong. A command for a timer, a focus session or an alarm that no longer exists, or that names a task that no longer exists, says it was already removed. Starting a timer that already runs says so, and starting a finished timer, or a focus session whose tasks have no time left, names the task with no time left. A refused command still rings, chimes and brings back what was due. Switching on a one-time alarm whose moment has passed says so. A change to up next by a step that has already become the current step or a past one names that step and its task, and a change to up next of a focus session whose run has ended says the run has ended. Adding to up next the steps of a task with no time left names the task. Skipping today a timer, a one-time task, or a repeating task on a day that is not one of its repeat days names it and says it does not repeat today. A refused command never answers as if it had worked.
 _Avoid_: Error, rejection, denial
 
 ### Tasks over days
@@ -153,7 +153,7 @@ The days of the week on which a repeating task comes back. The task keeps the mo
 _Avoid_: Schedule, recurrence
 
 **Done for the day**:
-What a repeating task is once it is finished, until its next repeat day.
+What a repeating task is once it is finished or skipped today, until its next repeat day.
 _Avoid_: Done today, completed for today
 
 **Come back**:
@@ -161,11 +161,15 @@ What a repeating task that used time or was done does when its next repeat day b
 _Avoid_: Renew, refresh, recur
 
 **Mark done**:
-The person making a task done by hand without running it. A running task stops first, and the time it ran is tracked. A task that the run of a focus session uses is marked done only from that session's detail, beside the current focus step or from up next. That takes its steps out of up next for that run and, when the current focus step is the task's, ends that step at once, so its break or the next focus step starts, or the run ends after the last one. Its own card refuses, naming the session.
+The person making a task done by hand without running it. A running task stops first, and the time it ran is tracked. A task that the run of a focus session uses is marked done only from that session's detail, beside the current focus step or from up next. That takes its steps out of up next for that run and, when the current focus step is the task's, ends that step at once, so its break or the next focus step starts, or the run ends after the last one. Its own card refuses, naming the session, and offers Skip today instead for a repeating task on one of its repeat days.
 _Avoid_: Check off, complete, close
 
+**Skip today**:
+The person making a repeating task done for the day on one of its repeat days, while it is not done, because they leave it out this time. It does what Mark done does and is never permanent: the task comes back on its next repeat day as usual. Its repeat day result says skipped instead of finished, such as "0m of 4h, skipped", and no count of finished repeat days counts it. The repeat day is the local day of the moment the background runs the command. Its card offers it also while the run of a focus session uses the task, running or paused, and then it also takes the task's steps out of up next of that run and, when the current focus step is the task's, ends that step at once, as marking it done in the session's detail does. The saved plan does not change. One-time tasks and timers have no Skip today. Not to be confused with Skip, which ends a break.
+_Avoid_: Skip, pass, snooze
+
 **Undo done**:
-Giving a done task back what it had: the remaining time it had when it was marked done, or all of its planned time when it ran out. For a repeating task it undoes done for the day. A task that the run of a focus session uses cannot be undone until that run ends.
+Giving a done task back what it had: the remaining time it had when it was marked done, or all of its planned time when it ran out. For a repeating task it undoes done for the day, and a task skipped today is no longer skipped. A task that the run of a focus session uses cannot be undone until that run ends.
 _Avoid_: Reopen, uncheck, restore
 
 ### Focus sessions
@@ -183,7 +187,7 @@ One part of a focus session spent on one task. It uses up that task's remaining 
 _Avoid_: Piece, slice, round, pomodoro
 
 **Break**:
-The rest between two focus steps of a focus session. There is none after the last focus step.
+The rest between two focus steps of a focus session. There is none after the last focus step. A focus session on a break, running or paused, shows a cup instead of the focus target in the running bar, on its pinned row and on the overlay's pill. While it runs it looks calm in the theme's break colour, which differs from the accent that marks a running timer or focus step, and its mark never sweeps.
 _Avoid_: Rest, pause
 
 **Step length**:
@@ -202,7 +206,7 @@ The latest focus step of a running focus session that has started: the one in pr
 _Avoid_: Active step, now playing
 
 **Up next**:
-The part of a running focus session's plan after the current step. The person can move its steps, add the steps of a task the run does not have yet and that has time left, send a step to the front, or mark a task done, which takes all its steps out of up next and ends the current focus step at once when it is that task's. A change that names a step that has meanwhile started or passed is refused, and so is any change once the run has ended, since there is no up next any more. Changes to it last for that run only.
+The part of a running focus session's plan after the current step. The person can move its steps, add the steps of a task the run does not have yet and that has time left, send a step to the front, or mark a task done, which takes all its steps out of up next and ends the current focus step at once when it is that task's. Skipping a repeating task today from its card does the same. A change that names a step that has meanwhile started or passed is refused, and so is any change once the run has ended, since there is no up next any more. Changes to it last for that run only.
 _Avoid_: Queue, backlog, playlist
 
 **Progress line**:
@@ -210,7 +214,7 @@ The line on a focus session that shows every focus step and break in order, fill
 _Avoid_: Timeline, progress bar, track
 
 **Skip**:
-Ending a break early so the next focus step starts at once. A paused break cannot be skipped.
+Ending a break early so the next focus step starts at once. A paused break cannot be skipped. Not to be confused with Skip today, which is for a repeating task.
 _Avoid_: Cancel break, jump
 
 **End early**:
@@ -248,11 +252,11 @@ A stretch of time from one moment to a later one. Tracked time is made of the sp
 _Avoid_: Interval, period, session
 
 **Repeat day result**:
-How one repeat day of a repeating task went: the planned time the task had when it came back, the time tracked from that repeat day up to the next one, and whether the task was finished before the next one began. Every repeat day that passes keeps one, from the day the task got its repeat days on, whether the browser was open or closed: a task that comes back keeps one for each repeat day it leaves, and a repeat day the task was not used or done on is kept once its next repeat day begins, as not finished with whatever was tracked, such as "0m of 1h, unfinished". A repeat day before the task was added or got its repeat days keeps none, and so does one the task was not used on if it was saved before results of unused repeat days were kept. The repeat day that has begun most recently has no result until the next one begins. Changing the planned time later does not change a result.
+How one repeat day of a repeating task went: the planned time the task had when it came back, the time tracked from that repeat day up to the next one, and whether the task was finished before the next one began, or skipped, such as "40m of 4h, skipped". A skipped day is not finished. A result kept before Skip today existed reads as it did. Every repeat day that passes keeps one, from the day the task got its repeat days on, whether the browser was open or closed: a task that comes back keeps one for each repeat day it leaves, and a repeat day the task was not used or done on is kept once its next repeat day begins, as not finished with whatever was tracked, such as "0m of 1h, unfinished". A repeat day before the task was added or got its repeat days keeps none, and so does one the task was not used on if it was saved before results of unused repeat days were kept. The repeat day that has begun most recently has no result until the next one begins. Changing the planned time later does not change a result.
 _Avoid_: Score, streak, day history
 
 **Last time**:
-On one of a repeating task's repeat days, the repeat day result of the repeat day before it: the time tracked of the time planned, or that it was finished. The task's card shows it while the task is idle, so it goes once the task is started or marked done.
+On one of a repeating task's repeat days, the repeat day result of the repeat day before it: the time tracked of the time planned, or that it was finished, or that it was skipped, after the time tracked of the time planned when any was tracked. The task's card shows it while the task is idle, so it goes once the task is started or marked done.
 _Avoid_: Previous result, yesterday
 
 **Statistics**:
@@ -335,6 +339,10 @@ _Avoid_: Upcoming alarms, next alarms
 The window that opens from the extension's toolbar button. It holds the whole app: today, timers, focus sessions, alarms, music, statistics and settings. There is no separate full page.
 _Avoid_: Dashboard, app page, window
 
+**Toolbar badge**:
+The small count on the extension's toolbar button of the timers and focus sessions that are running. A focus session in a focus step or a break counts once, and a task its run uses does not count again. Paused, idle and finished ones do not count. Above nine it shows 9+, and while nothing runs there is none. It has one colour while a timer or a focus step runs, and a calmer one while every one that runs is a focus session on a break. It changes with commands, wakes and each start of the background, never by ticking.
+_Avoid_: Counter, icon number, notification count
+
 **Dialog**:
 The panel that opens over the popup to add or edit one timer, task, alarm or focus session.
 _Avoid_: Modal, popup, form page
@@ -349,7 +357,7 @@ _Avoid_: Sounds, library, audio, media
 
 **Running bar**:
 The bar above the popup's tabs that shows each running timer with its remaining time and a button to pause it. It is hidden when nothing runs.
-Running focus sessions show there too, before the timers, each with what is left of its focus step or break. Chips that do not fit scroll sideways, by wheel, touchpad or keyboard focus, with no scrollbar shown.
+Running focus sessions show there too, before the timers, each with what is left of its focus step or break. One on a break shows a cup and the word Break before its time, as in Work · Break 04:31, in the calm break colour. Chips that do not fit scroll sideways, by wheel, touchpad or keyboard focus, with no scrollbar shown.
 _Avoid_: Dock, tray, status bar
 
 **Snackbar**:
@@ -361,7 +369,7 @@ The view in Focus that shows one running or paused focus session in full: its cu
 _Avoid_: Session page, player, session screen
 
 **Overlay**:
-The floating area on top of a web page where pinned timers and focus sessions show, each with its remaining time and a button to start, pause or resume it. It sits in a corner of the page and can be collapsed into a small pill or dragged to another corner, and every page remembers both. It is hidden when nothing is pinned, and the person can turn it off for every page in settings.
+The floating area on top of a web page where pinned timers and focus sessions show, each with its remaining time and a button to start, pause or resume it. It starts in the bottom right corner of the page and can be collapsed into a small pill. Its Move toggle turns on move mode, in which the person drags it anywhere on the page, or moves it with the arrow keys, and it stays exactly where it is dropped. Out of move mode it cannot be moved. Move mode is off on every page the overlay opens on and turns off when the overlay collapses. Where it stays is its position: the corner of the page nearest to it and its distance from that corner's two edges, so it keeps to that corner as the window changes size, and it comes in as far as it must to stay whole inside the page and clear of its scrollbars. Every page remembers its position and whether it is collapsed, and the pill sits at the same place. Collapsed, the pill shows the first pinned one that is running, focus sessions before timers, with its remaining time and how many more are running, or how many are pinned while none is running. Open, it marks the row of each running one with the theme's accent, and the mark stays still when the person asks for reduced motion. The row of a focus session on a break is marked in the calm break colour instead, without the sweep, and a pill that shows one has a cup in that colour. It is hidden when nothing is pinned, and the person can turn it off for every page in settings.
 _Avoid_: Widget, floating window, content script
 
 **Pin**:

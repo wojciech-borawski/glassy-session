@@ -16,6 +16,7 @@ export type Named = Readonly<{ id: string, name: string }>
  * Not up next: the command changes up next by a step of a running focus session that has become the current step or a past one. `step` is its place in the run's plan, from 0.
  * Run ended: the command changes up next of a focus session that no longer has a run.
  * No time left: the command adds the steps of a task that has no remaining time to a focus session's run.
+ * Not repeating today: the command skips today a timer, a one-time task, or a repeating task on a day that is not one of its repeat days.
  * Audio file in use: the command removes one of the person's own audio files that the timers, alarms, chimes and playlists in `usedBy` still play.
  */
 export type Refusal =
@@ -26,6 +27,7 @@ export type Refusal =
   | Readonly<{ reason: 'not up next', task: Named, step: number }>
   | Readonly<{ reason: 'run ended' }>
   | Readonly<{ reason: 'no time left', task: Named }>
+  | Readonly<{ reason: 'not repeating today', task: Named }>
   | Readonly<{ reason: 'audio file in use', usedBy: readonly SoundUser[] }>
 
 /** The refusal of a command that threw the error instead of finishing. */

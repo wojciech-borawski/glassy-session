@@ -8,8 +8,10 @@ export type RepeatDayResult = Readonly<{
   planned: Duration
   /** The time tracked from that repeat day up to the next one. */
   tracked: Duration
-  /** Whether the task became finished before its next repeat day began. */
+  /** Whether the task became finished before its next repeat day began. A skipped day was not finished. */
   finished: boolean
+  /** Whether the task was skipped that day instead of finished. A result kept before skipping was possible has none. */
+  skipped?: true
 }>
 
 /** The repeat day results of each repeating task, by task id and then by repeat day. */
@@ -24,6 +26,8 @@ export type ComingBack = Readonly<{
   since: Day
   /** The day it became finished, or null when it did not. */
   finishedOn: Day | null
+  /** Whether it became finished by being skipped that day. Defaults to false. */
+  skipped?: boolean
 }>
 
 export function recordRepeatDays(results: RepeatDayResults, task: ComingBack, trackedTime: TrackedTime, today: Day): RepeatDayResults {
@@ -31,8 +35,11 @@ export function recordRepeatDays(results: RepeatDayResults, task: ComingBack, tr
   const upTo = latestRepeatDay(task.repeatDays, today)
   for (let day = latestRepeatDay(task.repeatDays, task.since); day < upTo; day = nextRepeatDay(task.repeatDays, day)) {
     const next = nextRepeatDay(task.repeatDays, day)
-    const finished = task.finishedOn !== null && day <= task.finishedOn && task.finishedOn < next
-    left[day] = { planned: task.plannedTime, tracked: trackedBetween(trackedTime, task.taskId, day, next), finished }
+    const doneThatDay = task.finishedOn !== null && day <= task.finishedOn && task.finishedOn < next
+    const tracked = trackedBetween(trackedTime, task.taskId, day, next)
+    left[day] = doneThatDay && task.skipped === true
+      ? { planned: task.plannedTime, tracked, finished: false, skipped: true }
+      : { planned: task.plannedTime, tracked, finished: doneThatDay }
   }
   return { ...results, [task.taskId]: left }
 }

@@ -11,7 +11,7 @@ describe('the overlay settings as the browser keeps them', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 20))
 
-    expect(settings.value).toEqual({ shownOnPages: true, corner: 'bottom right', collapsed: false })
+    expect(settings.value).toEqual({ shownOnPages: true, corner: 'bottom right', offset: { x: 12, y: 12 }, collapsed: false })
   })
 
   test('a change saves the fields it names, keeps the others, and every page following the settings sees it', async () => {
@@ -21,8 +21,8 @@ describe('the overlay settings as the browser keeps them', () => {
     await onePage.change({ corner: 'top left' })
     await onePage.change({ collapsed: true })
 
-    await vi.waitFor(() => expect(otherPage.settings.value).toEqual({ shownOnPages: true, corner: 'top left', collapsed: true }))
-    expect(await fakeBrowser.storage.local.get('overlaySettings')).toEqual({ overlaySettings: { shownOnPages: true, corner: 'top left', collapsed: true } })
+    await vi.waitFor(() => expect(otherPage.settings.value).toEqual({ shownOnPages: true, corner: 'top left', offset: { x: 12, y: 12 }, collapsed: true }))
+    expect(await fakeBrowser.storage.local.get('overlaySettings')).toEqual({ overlaySettings: { shownOnPages: true, corner: 'top left', offset: { x: 12, y: 12 }, collapsed: true } })
   })
 
   test('a stored field this version does not know stands in as its default, and the fields it knows are kept', async () => {
@@ -30,9 +30,40 @@ describe('the overlay settings as the browser keeps them', () => {
     const { settings } = createBrowserOverlaySettings()
 
     await vi.waitFor(() => expect(settings.value.corner).toBe('top left'))
-    expect(settings.value).toEqual({ shownOnPages: true, corner: 'top left', collapsed: true })
+    expect(settings.value).toEqual({ shownOnPages: true, corner: 'top left', offset: { x: 12, y: 12 }, collapsed: true })
 
     await fakeBrowser.storage.local.set({ overlaySettings: { corner: 'middle', collapsed: false } })
-    await vi.waitFor(() => expect(settings.value).toEqual({ shownOnPages: true, corner: 'bottom right', collapsed: false }))
+    await vi.waitFor(() => expect(settings.value).toEqual({ shownOnPages: true, corner: 'bottom right', offset: { x: 12, y: 12 }, collapsed: false }))
+  })
+
+  test('settings saved before the overlay could stay anywhere read as their corner, 12 pixels in from both edges', async () => {
+    await fakeBrowser.storage.local.set({ overlaySettings: { shownOnPages: true, corner: 'top left', collapsed: false } })
+    const { settings } = createBrowserOverlaySettings()
+
+    await vi.waitFor(() => expect(settings.value.corner).toBe('top left'))
+    expect(settings.value.offset).toEqual({ x: 12, y: 12 })
+  })
+
+  test('a position the overlay was dropped at is saved, and every page and later visit reads it back', async () => {
+    const onePage = createBrowserOverlaySettings()
+
+    await onePage.change({ corner: 'bottom left', offset: { x: 340, y: 96 } })
+
+    const laterVisit = createBrowserOverlaySettings()
+    await vi.waitFor(() => expect(laterVisit.settings.value).toMatchObject({ corner: 'bottom left', offset: { x: 340, y: 96 } }))
+    await vi.waitFor(() => expect(onePage.settings.value).toMatchObject({ corner: 'bottom left', offset: { x: 340, y: 96 } }))
+  })
+
+  test.each([
+    ['not a pair of distances', 'far'],
+    ['a distance that is not a number', { x: '340', y: 96 }],
+    ['a distance below zero', { x: -4, y: 96 }],
+    ['a distance that is not finite', { x: 340, y: Number.POSITIVE_INFINITY }]
+  ])('a stored offset that is %s reads as 12 pixels in from both edges', async (_, offset) => {
+    await fakeBrowser.storage.local.set({ overlaySettings: { shownOnPages: true, corner: 'top right', offset, collapsed: false } })
+    const { settings } = createBrowserOverlaySettings()
+
+    await vi.waitFor(() => expect(settings.value.corner).toBe('top right'))
+    expect(settings.value.offset).toEqual({ x: 12, y: 12 })
   })
 })

@@ -27,7 +27,7 @@ const taskId = useId()
               day: formatDay(result.day, locale, { weekday: 'short', month: 'short', day: 'numeric' }),
               tracked: formatHoursAndMinutes(result.tracked),
               planned: formatHoursAndMinutes(result.planned),
-              result: t(result.finished ? 'repeatDays.finished' : 'repeatDays.unfinished')
+              result: t(result.finished ? 'repeatDays.finished' : result.skipped === true ? 'repeatDays.skipped' : 'repeatDays.unfinished')
             }) }}
           </li>
         </ul>

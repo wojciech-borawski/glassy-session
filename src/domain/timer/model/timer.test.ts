@@ -1,5 +1,5 @@
 import { localDayOf } from '@/domain/tracking/local-day'
-import { comeBack, createTimer, finishesAt, isForToday, isPinned, markDone, undoDone, pause, pin, remainingTimeAt, reset, runStateAt, settle, start, unpin, useUp, withDetails, type NewTimer } from './timer'
+import { comeBack, createTimer, finishesAt, isForToday, isPinned, markDone, undoDone, pause, pin, remainingTimeAt, reset, runStateAt, settle, skipToday, start, unpin, useUp, withDetails, type NewTimer } from './timer'
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
@@ -276,6 +276,40 @@ describe('marking a task done by hand', () => {
     const done = finishedTask()
 
     expect(markDone(done, NINE + 2 * HOUR)).toEqual({ timer: done, ran: null })
+  })
+})
+
+describe('skipping a repeating task today', () => {
+  function readingRunningSinceNine() {
+    return start(createTimer({ id: 'read', name: 'Read', kind: 'task', plannedTime: 30 * MINUTE, appearance: { colour: 'green' }, repeatDays: [2] }), NINE).timer
+  }
+
+  test('a running repeating task that is skipped stops, reports the span it ran, and is done for the day as skipped', () => {
+    const { timer, ran } = skipToday(readingRunningSinceNine(), NINE + 10 * MINUTE)
+
+    expect(runStateAt(timer, NINE + HOUR)).toBe('finished')
+    expect(ran).toEqual({ from: NINE, to: NINE + 10 * MINUTE })
+    expect(timer.done).toEqual({ at: NINE + 10 * MINUTE, remainingTimeBefore: 20 * MINUTE, skipped: true })
+  })
+
+  test('a repeating task that already ran out stays done from when it ran out and is not skipped', () => {
+    const { timer, ran } = skipToday(readingRunningSinceNine(), NINE + HOUR)
+
+    expect(timer.done).toEqual({ at: NINE + 30 * MINUTE, remainingTimeBefore: 0 })
+    expect(ran).toEqual({ from: NINE, to: NINE + 30 * MINUTE })
+  })
+
+  test('a one-time task or a timer cannot be skipped today, since only a repeating task comes back', () => {
+    expect(() => skipToday(newTask(), NINE)).toThrow('repeating task')
+  })
+
+  test('undoing done on a skipped task gives back the remaining time it had and it is no longer skipped', () => {
+    const skipped = skipToday(readingRunningSinceNine(), NINE + 10 * MINUTE).timer
+
+    const { timer } = undoDone(skipped)
+
+    expect(remainingTimeAt(timer, NINE + HOUR)).toBe(20 * MINUTE)
+    expect(timer.done).toBeUndefined()
   })
 })
 

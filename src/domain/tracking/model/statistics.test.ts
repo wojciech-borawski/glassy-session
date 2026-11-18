@@ -337,4 +337,18 @@ describe('repeat day results in a range', () => {
       { taskId: 'removed-task', name: null, finished: 1, days: [{ day: '2026-11-17', planned: HOUR, tracked: HOUR, finished: true }] }
     ])
   })
+
+  test('do not count a skipped repeat day as finished, and keep that it was skipped', () => {
+    const results = { 'practise-piano': { '2026-11-16': { planned: HOUR, tracked: 40 * MINUTE, finished: false, skipped: true }, '2026-11-18': { planned: HOUR, tracked: HOUR, finished: true } } } as const
+
+    expect(repeatDaysIn(results, { first: '2026-11-16', last: '2026-11-22' }, tasks)).toEqual([{
+      taskId: 'practise-piano',
+      name: 'Practise piano',
+      finished: 1,
+      days: [
+        { day: '2026-11-16', planned: HOUR, tracked: 40 * MINUTE, finished: false, skipped: true },
+        { day: '2026-11-18', planned: HOUR, tracked: HOUR, finished: true }
+      ]
+    }])
+  })
 })

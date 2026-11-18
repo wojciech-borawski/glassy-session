@@ -46,6 +46,25 @@ describe('a pinned timer in the overlay', () => {
     expect(emitted('pause')).toHaveLength(1)
   })
 
+  test('marks the row of a running timer as running', () => {
+    renderRow(start(tea, NINE).timer, NINE + MINUTE)
+
+    expect(screen.getByRole('listitem', { name: 'Tea' })).toHaveClass('n-list-row--running')
+  })
+
+  test('does not mark the row of a paused timer as running', () => {
+    renderRow(pause(start(tea, NINE - MINUTE).timer, NINE - 30_000).timer)
+
+    expect(screen.getByRole('listitem', { name: 'Tea' })).not.toHaveClass('n-list-row--running')
+  })
+
+  test('does not mark the row of a task that a focus session runs as running', () => {
+    const readMail = createTimer({ id: 'read-mail', name: 'Read mail', kind: 'task', plannedTime: 15 * MINUTE, appearance: { colour: 'green' } })
+    renderRow({ ...readMail, remainingTime: 9 * MINUTE }, NINE, 'Morning')
+
+    expect(screen.getByRole('listitem', { name: 'Read mail' })).not.toHaveClass('n-list-row--running')
+  })
+
   test('says a finished timer is finished and offers nothing to run', () => {
     renderRow(start(tea, NINE).timer, NINE + 5 * MINUTE)
 

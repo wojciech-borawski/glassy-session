@@ -9,7 +9,7 @@ describe('a timer command', () => {
     expect(isTimerCommand({ type, timerId: 'tea' })).toBe(true)
   })
 
-  test.each(['markDone', 'undoDone'])('%s for a stored task by its id is a timer command', (type) => {
+  test.each(['markDone', 'undoDone', 'skipToday'])('%s for a stored task by its id is a timer command', (type) => {
     expect(isTimerCommand({ type, timerId: 'write-report' })).toBe(true)
   })
 

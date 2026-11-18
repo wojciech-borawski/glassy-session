@@ -25,11 +25,11 @@ const NINE = new Date(2026, 10, 17, 9).getTime()
 const tea = createTimer({ id: 'tea', name: 'Tea', kind: 'timer', plannedTime: 4 * MINUTE, appearance: { colour: 'gold' } })
 const nap = createTimer({ id: 'nap', name: 'Nap', kind: 'timer', plannedTime: 20 * MINUTE, appearance: { colour: 'violet' } })
 
-beforeEach(() => {
+beforeEach(async () => {
   fakeBrowser.reset()
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(NINE)
-  runEngines()
+  await runEngines()
 })
 
 afterEach(() => {
@@ -66,18 +66,18 @@ describe('the overlay on a web page', () => {
     expect(await screen.findByRole('region', { name: 'Pinned timers and focus sessions' })).toBeInTheDocument()
   })
 
-  test('collapses to a pill and moves to another corner, and every page remembers both', async () => {
+  test('moved in move mode and collapsed to a pill, stays where it was moved, and every page remembers both', async () => {
     await createBrowserTimerStore().save([pin(tea).timer])
     renderOverlay()
-    const handle = await screen.findByRole('button', { name: 'Move the overlay' })
+    const toggle = await screen.findByRole('button', { name: 'Move the overlay', pressed: false })
 
-    handle.focus()
-    await userEvent.keyboard('{ArrowUp}')
-    await vi.waitFor(() => expect(screen.getByRole('region')).toHaveStyle({ top: '12px', right: '12px' }))
+    await userEvent.click(toggle)
+    await userEvent.keyboard('{Shift>}{ArrowLeft}{ArrowUp}{/Shift}')
+    await vi.waitFor(() => expect(screen.getByRole('region')).toHaveStyle({ bottom: '44px', right: '44px' }))
     await userEvent.click(screen.getByRole('button', { name: 'Collapse the overlay' }))
 
-    expect(await screen.findByRole('button', { name: 'Show the overlay, 1 pinned' })).toBeInTheDocument()
-    expect(await fakeBrowser.storage.local.get('overlaySettings')).toEqual({ overlaySettings: { shownOnPages: true, corner: 'top right', collapsed: true } })
+    expect(await screen.findByRole('button', { name: 'Show the overlay, 1 pinned' })).toHaveStyle({ bottom: '44px', right: '44px' })
+    expect(await fakeBrowser.storage.local.get('overlaySettings')).toEqual({ overlaySettings: { shownOnPages: true, corner: 'bottom right', offset: { x: 44, y: 44 }, collapsed: true } })
   })
 
   test('starts and pauses a pinned timer, saying so inside its own box', async () => {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import NButton from '@/ui/n-button/index.vue'
+import NListRow from '@/ui/n-list-row/index.vue'
 import NSwatch from '@/ui/n-swatch/index.vue'
 import { formatCountdown } from '@/utils/time/format-duration'
 import type { Moment } from '@/utils/time/units'
@@ -26,7 +27,7 @@ const finishedKey = computed(() => props.timer.repeatDays === undefined ? props.
 </script>
 
 <template>
-  <li class="pinned-timer" :aria-labelledby="nameId">
+  <NListRow :running="runState === 'running'" :aria-labelledby="nameId">
     <NSwatch :colour="timer.appearance.colour" size="dot" />
     <b :id="nameId" class="pinned-timer__name">{{ timer.name }}</b>
     <template v-if="runState === 'finished'">
@@ -39,22 +40,10 @@ const finishedKey = computed(() => props.timer.repeatDays === undefined ? props.
       <NButton v-else-if="runState === 'running'" icon="pause" :label="t('timer.action.pause', { name: timer.name })" @click="emit('pause')" />
       <NButton v-else icon="play" :label="t('timer.action.start', { name: timer.name })" @click="emit('start')" />
     </template>
-  </li>
+  </NListRow>
 </template>
 
 <style scoped>
-.pinned-timer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 3px 4px 3px 10px;
-  border: 1px solid var(--n-line);
-  border-radius: var(--n-radius);
-  background: var(--n-surface);
-  box-shadow: var(--n-shadow);
-}
-
 .pinned-timer__name {
   flex: 1;
   min-width: 0;

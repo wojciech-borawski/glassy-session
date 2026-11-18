@@ -1,4 +1,4 @@
-import { defaultOverlaySettings, type Corner, type OverlaySettings } from '@/domain/overlay/model/overlay-settings'
+import { CORNER_GAP, defaultOverlaySettings, type Corner, type Offset, type OverlaySettings } from '@/domain/overlay/model/overlay-settings'
 import type { StoredOverlaySettings } from '@/domain/overlay/ports'
 import { isRecord } from '@/utils/is-record'
 import { followStorage } from './followed-storage'
@@ -8,12 +8,17 @@ const CORNERS: readonly unknown[] = ['top left', 'top right', 'bottom left', 'bo
 
 const isCorner = (value: unknown): value is Corner => CORNERS.includes(value)
 
+const isDistance = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0
+
+const isOffset = (value: unknown): value is Offset => isRecord(value) && isDistance(value.x) && isDistance(value.y)
+
 /** The saved settings, with the default standing in for each field this version does not know. */
 function knownSettings(saved: unknown): OverlaySettings {
   const fields = isRecord(saved) ? saved : {}
   return {
     shownOnPages: typeof fields.shownOnPages === 'boolean' ? fields.shownOnPages : defaultOverlaySettings.shownOnPages,
     corner: isCorner(fields.corner) ? fields.corner : defaultOverlaySettings.corner,
+    offset: isOffset(fields.offset) ? { x: fields.offset.x, y: fields.offset.y } : CORNER_GAP,
     collapsed: typeof fields.collapsed === 'boolean' ? fields.collapsed : defaultOverlaySettings.collapsed
   }
 }

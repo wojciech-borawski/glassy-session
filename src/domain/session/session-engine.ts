@@ -3,7 +3,7 @@ import { markDone, type Timer } from '../timer/model/timer'
 import type { Refusal } from '../command/command-outcome'
 import type { RunCommand } from '../command/command-runner'
 import type { SessionCommand } from './commands'
-import { addTaskSteps, createFocusSession, endEarly, moveStep, pause, pin, resume, sendToFront, skip, start, taskTimesAt, tasksInRun, unpin, upNextAt, withTaskDone, withSettings, type FocusSession, type FocusSessionSettings, type NewFocusSession, type Transition } from './model/focus-session'
+import { addTaskSteps, createFocusSession, endEarly, moveStep, pause, pin, resume, sendToFront, skip, start, taskTimesAt, tasksInRun, unpin, upNextAt, withSettings, type FocusSession, type FocusSessionSettings, type NewFocusSession, type Transition } from './model/focus-session'
 
 /** Refuses a change to up next of a session with no run, or by a step that is no longer up next, naming the first such step and its task. */
 function notUpNext(session: FocusSession, steps: readonly number[], timers: readonly Timer[], now: Moment): Refusal | null {
@@ -107,7 +107,7 @@ export function createSessionEngine(run: RunCommand) {
       }
       return { sessions: sessions.map((one) => one.id === sessionId ? addTaskSteps(one, task, now) : one) }
     }),
-    /** Marks the task done, takes its steps out of up next of this session's run and ends its current focus step. A task that another session's run uses is refused. */
+    /** Marks the task done, which the runner takes out of up next of this session's run, ending its current focus step. A task that another session's run uses is refused. */
     markTaskDone: (sessionId: string, taskId: string, now: Moment) => run(now, ({ timers, sessions, usedInRun }) => {
       const session = sessions.find(({ id }) => id === sessionId)
       if (session === undefined) {
@@ -127,7 +127,7 @@ export function createSessionEngine(run: RunCommand) {
       const done = markDone(task, now)
       return {
         timers: timers.map((timer) => timer.id === taskId ? done.timer : timer),
-        sessions: sessions.map((session) => session.id === sessionId ? withTaskDone(session, taskId, now) : session),
+        doneInRun: taskId,
         ran: done.ran === null ? [] : [{ timerId: taskId, span: done.ran }]
       }
     }),

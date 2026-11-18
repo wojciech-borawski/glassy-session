@@ -1,4 +1,4 @@
-import { addTaskSteps, createFocusSession, endEarly, fittedPlanOf, isCountingDownAt, isPinned, moveStep, pause, pin, progressAt, resume, sendToFront, settle, skip, start, taskTimesAt, unpin, upNextAt, withSettings, type NewFocusSession, type Progress } from './focus-session'
+import { addTaskSteps, createFocusSession, endEarly, fittedPlanOf, isCountingDownAt, isOnBreakAt, isPinned, moveStep, pause, pin, progressAt, resume, sendToFront, settle, skip, start, taskTimesAt, unpin, upNextAt, withSettings, type NewFocusSession, type Progress } from './focus-session'
 import type { TaskTime } from './plan'
 import { createTimer, start as startTimer } from '../../timer/model/timer'
 
@@ -306,6 +306,16 @@ describe('pausing and resuming', () => {
     expect([NINE + 10 * MINUTE, NINE + 27 * MINUTE, NINE + 2 * HOUR].map((now) => isCountingDownAt(running, now))).toEqual([true, true, false])
     expect(isCountingDownAt(pausedAtTenPastNine(), NINE + 11 * MINUTE)).toBe(false)
     expect(isCountingDownAt(reportThenEmail(), NINE)).toBe(false)
+  })
+
+  test('a session is on a break while its break runs and while it is paused in a break, and not in a focus step, before it starts or once it has finished', () => {
+    const running = startedAtNine()
+    const pausedInBreak = pause(running, NINE + 27 * MINUTE).session
+
+    expect([NINE + 10 * MINUTE, NINE + 27 * MINUTE, NINE + 2 * HOUR].map((now) => isOnBreakAt(running, now))).toEqual([false, true, false])
+    expect(isOnBreakAt(pausedInBreak, NINE + 40 * MINUTE)).toBe(true)
+    expect(isOnBreakAt(pausedAtTenPastNine(), NINE + 40 * MINUTE)).toBe(false)
+    expect(isOnBreakAt(reportThenEmail(), NINE)).toBe(false)
   })
 
   test('a paused session keeps what is left of its focus step, and the time it stays paused is the delay that moves its estimated end later', () => {

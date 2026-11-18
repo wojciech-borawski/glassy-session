@@ -77,6 +77,26 @@ describe('the timer commands a view sends', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(says)
   })
 
+  /** Repeats on Tuesday, the day of NINE on the local clock. */
+  const reading = createTimer({ id: 'read', name: 'Read', kind: 'task', plannedTime: 30 * MINUTE, appearance: { colour: 'green' }, repeatDays: [2] })
+
+  test('skip a repeating task today and say so in the snackbar, naming the task', async () => {
+    const storedTimers = createMemoryStoredTimers({ now: () => NINE, timers: [reading] })
+
+    expect(await renderCommands(storedTimers).skipToday(reading)).toBeNull()
+
+    expect(storedTimers.timers.value[0]?.done?.skipped).toBe(true)
+    expect(await screen.findByRole('status')).toHaveTextContent('Read skipped today')
+  })
+
+  test('skip today a repeating task that the run of a focus session uses and say in the snackbar that it is taken out of that session', async () => {
+    const storedTimers = createMemoryStoredTimers({ now: () => NINE, timers: [reading] })
+
+    await renderCommands(storedTimers).skipToday(reading, 'Morning')
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Read skipped today and taken out of Morning')
+  })
+
   test('undo done for a done task and say so in the snackbar', async () => {
     const doneReport = markDone(writeReport, NINE).timer
     const storedTimers = createMemoryStoredTimers({ now: () => NINE + MINUTE, timers: [doneReport] })

@@ -19,11 +19,11 @@ const HOUR = 60 * MINUTE
 const tea = { id: 'tea', name: 'Tea', kind: 'timer', plannedTime: 3 * MINUTE, appearance: { colour: 'teal' } } as const
 const writeReport = { id: 'write-report', name: 'Write report', kind: 'task', plannedTime: 25 * MINUTE, appearance: { colour: 'blue' } } as const
 
-beforeEach(() => {
+beforeEach(async () => {
   fakeBrowser.reset()
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(NINE)
-  runEngines()
+  await runEngines()
 })
 
 afterEach(() => {

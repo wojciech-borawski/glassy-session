@@ -1,6 +1,7 @@
 import type { Moment } from '@/utils/time/units'
 import type { FocusSession } from '../session/model/focus-session'
 import type { Timer } from '../timer/model/timer'
+import type { ToolbarBadge } from './toolbar-badge'
 
 /** What a wake is for. A timer, a focus session and an alarm may share an id, but never a wake. */
 export type Wake = Readonly<{ of: 'timer' | 'focus session' | 'alarm', id: string }>
@@ -26,4 +27,10 @@ type TimersAndSessions = Readonly<{ timers: readonly Timer[], sessions: readonly
 export type TimersAndSessionsStore = Readonly<{
   load(): Promise<TimersAndSessions>
   save(stored: TimersAndSessions): Promise<void>
+}>
+
+/** The extension's toolbar button, which shows the toolbar badge. */
+export type ToolbarButton = Readonly<{
+  /** Shows the badge on the button, or no badge for null. It never rejects: a badge that cannot be shown is logged, so no command fails for it. */
+  showBadge(badge: ToolbarBadge | null): Promise<void>
 }>

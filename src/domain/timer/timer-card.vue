@@ -8,7 +8,8 @@ import { weekdayNames, weekFromMonday } from '@/ui/weekdays'
 import { formatCountdown, formatHoursAndMinutes } from '@/utils/time/format-duration'
 import type { Moment } from '@/utils/time/units'
 import type { RepeatDayResult } from '../tracking/model/repeat-day-results'
-import { isPinned, remainingTimeAt, runStateAt, type Timer } from './model/timer'
+import { localDayOf } from '../tracking/local-day'
+import { isPinned, remainingTimeAt, repeatsToday, runStateAt, type Timer } from './model/timer'
 
 const props = defineProps<{
   timer: Timer
@@ -25,6 +26,7 @@ defineEmits<{
   reset: []
   markDone: []
   undoDone: []
+  skipToday: []
   edit: []
   pin: []
   unpin: []
@@ -38,6 +40,21 @@ const initial = computed(() => props.timer.name.trim().charAt(0).toUpperCase())
 const remainingTime = computed(() => remainingTimeAt(props.timer, props.now))
 const runState = computed(() => runStateAt(props.timer, props.now))
 const used = computed(() => 1 - remainingTime.value / props.timer.plannedTime)
+const lastTimeText = computed(() => {
+  const { lastTime } = props
+  if (lastTime === undefined) {
+    return null
+  }
+  if (lastTime.finished) {
+    return t('timer.lastTimeFinished')
+  }
+  const trackedOfPlanned = { tracked: formatHoursAndMinutes(lastTime.tracked), planned: formatHoursAndMinutes(lastTime.planned) }
+  if (lastTime.skipped === true) {
+    return lastTime.tracked === 0 ? t('timer.lastTimeSkipped') : t('timer.lastTimeSkippedAfter', trackedOfPlanned)
+  }
+  return t('timer.lastTime', trackedOfPlanned)
+})
+const canSkipToday = computed(() => runState.value !== 'finished' && repeatsToday(props.timer, props.now, localDayOf))
 const finishedKey = computed(() => props.timer.repeatDays === undefined ? props.timer.kind : 'repeatingTask')
 const repeatsOn = (day: number) => props.timer.repeatDays?.some((repeatDay) => repeatDay === day) ?? false
 const repeatDayNames = computed(() => new Intl.ListFormat(locale.value).format((props.timer.repeatDays ?? []).map((day) => t(`weekday.${weekdayNames[day]}.name`))))
@@ -58,7 +75,7 @@ const repeatDayNames = computed(() => new Intl.ListFormat(locale.value).format((
     <p class="timer-card__remaining">{{ runState === 'finished' ? t(`timer.finished.${finishedKey}`) : formatCountdown(remainingTime) }}</p>
     <p v-if="inSession !== undefined" class="timer-card__note">{{ t('timer.inSession', { name: inSession }) }}</p>
     <p class="timer-card__note">{{ t('timer.plannedOf', { planned: formatHoursAndMinutes(timer.plannedTime) }) }}</p>
-    <p v-if="lastTime !== undefined && runState === 'idle'" class="timer-card__note">{{ lastTime.finished ? t('timer.lastTimeFinished') : t('timer.lastTime', { tracked: formatHoursAndMinutes(lastTime.tracked), planned: formatHoursAndMinutes(lastTime.planned) }) }}</p>
+    <p v-if="lastTimeText !== null && runState === 'idle'" class="timer-card__note">{{ lastTimeText }}</p>
     <p v-if="timer.repeatDays" class="timer-card__repeat" role="img" :aria-label="t('timer.repeatsOn', { days: repeatDayNames })">
       <span
         v-for="day in weekFromMonday"
@@ -76,6 +93,7 @@ const repeatDayNames = computed(() => new Intl.ListFormat(locale.value).format((
       <NButton v-if="timer.kind === 'task' && runState === 'finished' && inSession === undefined" :label="t('timer.action.undoDone', { name: timer.name })" @click="$emit('undoDone')">{{ t('timer.action.undoDoneShort') }}</NButton>
       <NButton v-else-if="runState !== 'idle' && inSession === undefined" :label="t('timer.action.reset', { name: timer.name })" @click="$emit('reset')">{{ t('timer.action.resetShort') }}</NButton>
       <NButton v-if="timer.kind === 'task' && runState !== 'finished' && inSession === undefined" icon="check" :label="t('timer.action.markDone', { name: timer.name })" @click="$emit('markDone')" />
+      <NButton v-if="canSkipToday" icon="calendar-skip" :label="t('timer.action.skipToday', { name: timer.name })" @click="$emit('skipToday')" />
       <NButton icon="pencil" :label="t('timer.action.edit', { name: timer.name })" @click="$emit('edit')" />
     </template>
   </NCard>

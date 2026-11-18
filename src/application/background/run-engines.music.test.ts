@@ -9,10 +9,10 @@ import { createBrowserSoundSettingsStore } from '@/infrastructure/browser/sound-
 import { sendTimerCommand } from '@/infrastructure/browser/timer-commands'
 import { runEngines } from './run-engines'
 
-beforeEach(() => {
+beforeEach(async () => {
   fakeBrowser.reset()
   globalThis.indexedDB = new IDBFactory()
-  runEngines()
+  await runEngines()
 })
 
 describe('the background running music commands', () => {

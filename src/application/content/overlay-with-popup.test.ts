@@ -13,11 +13,11 @@ import OverlayApp from './app.vue'
 const MINUTE = 60_000
 const NINE = new Date(2026, 10, 17, 9).getTime()
 
-beforeEach(() => {
+beforeEach(async () => {
   fakeBrowser.reset()
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(NINE)
-  runEngines()
+  await runEngines()
 })
 
 afterEach(() => {

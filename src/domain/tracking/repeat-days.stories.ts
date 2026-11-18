@@ -33,3 +33,17 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const AWeekOfRepeatDays: Story = {}
+
+export const AWeekWithASkippedDay: Story = {
+  args: {
+    tasks: [{
+      taskId: 'practise-piano',
+      name: 'Practise piano',
+      finished: 1,
+      days: [
+        { day: '2026-11-17', planned: 4 * HOUR, tracked: 0, finished: false, skipped: true },
+        { day: '2026-11-19', planned: 4 * HOUR, tracked: 4 * HOUR, finished: true }
+      ]
+    }]
+  }
+}

@@ -184,6 +184,12 @@ export function isCountingDownAt(session: FocusSession, now: Moment): boolean {
   return state === 'focus step' || state === 'break'
 }
 
+/** Whether the session is in a break, counting down or paused. */
+export function isOnBreakAt(session: FocusSession, now: Moment): boolean {
+  const progress = progressAt(session, now)
+  return progress.state === 'break' || (progress.state === 'paused' && progress.pausedIn === 'break')
+}
+
 export function withOnlyTasks(session: FocusSession, taskIds: ReadonlySet<string>): FocusSession {
   return {
     ...session,

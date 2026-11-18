@@ -25,6 +25,7 @@ page:
   placeholder: Nothing here yet.
 runningBar:
   label: Counting down
+  break: Break
 dialog:
   close: Close
 weekday:
@@ -107,6 +108,8 @@ timer:
   plannedOf: 'of {planned} planned'
   lastTime: 'Last time: {tracked} of {planned}'
   lastTimeFinished: 'Last time: finished'
+  lastTimeSkipped: 'Last time: skipped'
+  lastTimeSkippedAfter: 'Last time: {tracked} of {planned}, skipped'
   progress: '{name} progress'
   repeatsOn: 'Repeats on {days}'
   inSession: 'In {name}'
@@ -123,6 +126,7 @@ timer:
     resetShort: Reset
     edit: 'Edit {name}'
     markDone: 'Mark {name} done'
+    skipToday: 'Skip {name} today'
     undoDone: 'Undo done for {name}'
     undoDoneShort: Undo done
     pin: 'Pin {name} to the overlay'
@@ -170,6 +174,8 @@ timerCommand:
   removed: '{name} removed'
   markedDone: '{name} marked done'
   undoneDone: '{name} is no longer done'
+  skippedToday: '{name} skipped today'
+  skippedTodayInSession: '{name} skipped today and taken out of {session}'
   pinned: '{name} pinned to the overlay'
   unpinned: '{name} unpinned from the overlay'
 refusal:
@@ -181,6 +187,7 @@ refusal:
   notUpNext: 'Step {number}, {task}, is no longer up next'
   runEnded: The run has ended
   noTimeLeft: '{task} has no time left'
+  notRepeatingToday: '{task} does not repeat today, so there is nothing to skip'
   audioFileInUse: 'It is still played by {users}'
   audioFileUser:
     timer: 'the timer {name}'
@@ -413,12 +420,14 @@ overlay:
   label: Pinned timers and focus sessions
   collapse: Collapse the overlay
   expand: 'Show the overlay, {count} pinned'
+  expandRunning: 'Show the overlay, {name}, {remainingTime} left | Show the overlay, {name}, {remainingTime} left, {more} more running | Show the overlay, {name}, {remainingTime} left, {more} more running'
   move: Move the overlay
+  runningOnBreak: '{name}, break'
   title: Pinned
 overlaySettings:
   heading: Overlay
   shownOnPages: Show the overlay on web pages
-  shownOnPagesHint: Pinned timers and focus sessions show in a corner of every page.
+  shownOnPagesHint: Pinned timers and focus sessions show on top of every page, where you last moved them.
 taskFilter:
   label: Tasks shown
   all: All tasks
@@ -430,3 +439,4 @@ repeatDays:
   day: '{day}: {tracked} of {planned}, {result}'
   finished: finished
   unfinished: unfinished
+  skipped: skipped

@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/vue'
 import { createAppI18n } from '@/infrastructure/plugins/setup-i18n'
+import type { TaskRepeatDays } from './model/statistics'
 import RepeatDays from './repeat-days.vue'
 
 const MINUTE = 60_000
@@ -16,7 +17,7 @@ const gym = {
 }
 const oldTask = { taskId: 'old-task', name: null, finished: 0, days: [{ day: '2026-11-17', planned: 30 * MINUTE, tracked: 0, finished: false }] }
 
-function renderRepeatDays(tasks = [gym, oldTask]) {
+function renderRepeatDays(tasks: readonly TaskRepeatDays[] = [gym, oldTask]) {
   return render(RepeatDays, { props: { tasks }, global: { plugins: [createAppI18n()] } })
 }
 
@@ -29,6 +30,13 @@ describe('the repeat day results of a week', () => {
     expect(within(gymDays).getAllByRole('listitem').map((day) => day.textContent?.trim())).toEqual(['Mon, Nov 16: 40m of 1h, unfinished', 'Wed, Nov 18: 1h of 1h, finished'])
     const removedDays = within(list).getByRole('list', { name: 'Removed task: 0 of 1 repeat days finished' })
     expect(within(removedDays).getAllByRole('listitem').map((day) => day.textContent?.trim())).toEqual(['Tue, Nov 17: 0m of 30m, unfinished'])
+  })
+
+  test('says of a skipped repeat day that it was skipped, with its tracked and planned time, and does not count it as finished', () => {
+    renderRepeatDays([{ taskId: 'read', name: 'Read', finished: 0, days: [{ day: '2026-11-17', planned: 4 * HOUR, tracked: 0, finished: false, skipped: true }] }])
+
+    const readDays = screen.getByRole('list', { name: 'Read: 0 of 1 repeat days finished' })
+    expect(within(readDays).getAllByRole('listitem').map((day) => day.textContent?.trim())).toEqual(['Tue, Nov 17: 0m of 4h, skipped'])
   })
 
   test('shows nothing when no repeat day falls in the week', () => {

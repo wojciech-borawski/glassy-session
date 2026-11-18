@@ -1,6 +1,6 @@
 # GlassySession
 
-GlassySession is a browser extension for Chromium browsers and Firefox that keeps your work time in one popup. You save timers and tasks, run them on their own or put tasks into focus sessions with breaks, set alarms, and see how much time each task took this week. Your own audio files can play while you work, and the timers you pin stay in a corner of every web page. Everything stays in your browser.
+GlassySession is a browser extension for Chromium browsers and Firefox that keeps your work time in one popup. You save timers and tasks, run them on their own or put tasks into focus sessions with breaks, set alarms, and see how much time each task took this week. Your own audio files can play while you work, and the timers you pin stay on top of every web page. Everything stays in your browser.
 
 ![The Today view in the Frost light theme: a running focus session, today's alarm and the timers and tasks, with the running bar above the tabs](docs/screenshots/today-frost-light.png)
 
@@ -8,13 +8,13 @@ GlassySession is a browser extension for Chromium browsers and Firefox that keep
 
 ### Timers and tasks
 
-A timer counts down its planned time and rings when it runs out. A task is a timer that stands for work: its time is tracked, you can mark it done, and it can go into a focus session. A task can repeat on chosen days of the week and comes back with its full planned time on each of them. Each timer has a name, an optional description, a colour and its own ring sound, either one of the built-in sounds (Bell, Soft chime, Digital, Marimba) or an audio file of your own. Everything that runs also shows in the running bar above the tabs, with a button to pause it.
+A timer counts down its planned time and rings when it runs out. A task is a timer that stands for work: its time is tracked, you can mark it done, and it can go into a focus session. A task can repeat on chosen days of the week and comes back with its full planned time on each of them. Skip today takes a repeating task out for the rest of the day, also from a focus session running it, and Statistics counts that day as skipped. Each timer has a name, an optional description, a colour and its own ring sound, either one of the built-in sounds (Bell, Soft chime, Digital, Marimba) or an audio file of your own. Everything that runs also shows in the running bar above the tabs, with a button to pause it, and the toolbar button's badge shows how many timers and focus sessions run.
 
 ![The Timers view in the Lagoon dark theme, with a task that repeats on Monday, Wednesday and Friday and a task taken by a running focus session](docs/screenshots/timers-and-tasks-lagoon-dark.png)
 
 ### Focus sessions
 
-A focus session splits one or more tasks into focus steps of a set length with breaks between them, one task after another or alternating between them. While it runs you see the current step, what comes up next and when it should end. You can pause it, skip a break, end it early, reorder the steps or add another task for this run only. An end chime plays when a focus step ends and a softer start chime when the next one starts. You pick both in Settings.
+A focus session splits one or more tasks into focus steps of a set length with breaks between them, one task after another or alternating between them. While it runs you see the current step, what comes up next and when it should end. A break looks calm, with a cup and the word Break, so it never passes for a running focus step. You can pause it, skip a break, end it early, reorder the steps or add another task for this run only. An end chime plays when a focus step ends and a softer start chime when the next one starts. You pick both in Settings.
 
 ![A running focus session in the Pebble light theme: the current focus step, its background sound controls and the steps up next](docs/screenshots/focus-session-pebble-light.png)
 
@@ -44,7 +44,7 @@ Settings > Sounds holds the end chime, the start chime and the volume of rings a
 
 ### Overlay on web pages
 
-Pin a timer, a task or a focus session and it shows in a small panel in a corner of every http and https page, with its remaining time and a button to start, pause or resume it. You can collapse the panel or drag it to another corner. It shows only while something is pinned, and you can turn it off for every page in Settings.
+Pin a timer, a task or a focus session and it shows in a small panel on top of every http and https page, with its remaining time and a button to start, pause or resume it. Running rows stand out with an accent bar, and the collapsed pill shows the first running one with how many more run. You can collapse the panel, or turn on Move in its header and drag it anywhere, and it stays there on every page. It shows only while something is pinned, and you can turn it off for every page in Settings.
 
 ![The overlay in the bottom right corner of a sample web page, showing a pinned focus session and two pinned timers](docs/screenshots/overlay-on-a-page.png)
 

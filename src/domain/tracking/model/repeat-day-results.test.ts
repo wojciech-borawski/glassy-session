@@ -35,6 +35,12 @@ describe('repeat day results', () => {
     })
   })
 
+  test('a task skipped on Monday keeps Monday as skipped, not finished, with the time tracked before the skip', () => {
+    const results = recordRepeatDays({}, { ...gym, finishedOn: '2026-11-16', skipped: true }, { gym: { '2026-11-16': 40 * MINUTE } }, '2026-11-18')
+
+    expect(results).toEqual({ gym: { '2026-11-16': { planned: 60 * MINUTE, tracked: 40 * MINUTE, finished: false, skipped: true } } })
+  })
+
   test('a task used and finished on Tuesday, between its repeat days, counts for Monday with the time tracked from Monday up to Wednesday', () => {
     const tuesday = { ...gym, since: '2026-11-17', finishedOn: '2026-11-17' }
 

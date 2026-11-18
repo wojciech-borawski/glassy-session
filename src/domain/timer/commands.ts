@@ -7,9 +7,9 @@ import type { Appearance, NewTimer, TimerDetails } from './model/timer'
 export type TimerCommand =
   | Readonly<{ type: 'add', timer: NewTimer }>
   | Readonly<{ type: 'change', timerId: string, details: TimerDetails }>
-  | Readonly<{ type: 'start' | 'pause' | 'reset' | 'remove' | 'markDone' | 'undoDone' | 'pin' | 'unpin', timerId: string }>
+  | Readonly<{ type: 'start' | 'pause' | 'reset' | 'remove' | 'markDone' | 'undoDone' | 'skipToday' | 'pin' | 'unpin', timerId: string }>
 
-const COMMANDS_FOR_A_STORED_TIMER: readonly unknown[] = ['start', 'pause', 'reset', 'remove', 'markDone', 'undoDone', 'pin', 'unpin']
+const COMMANDS_FOR_A_STORED_TIMER: readonly unknown[] = ['start', 'pause', 'reset', 'remove', 'markDone', 'undoDone', 'skipToday', 'pin', 'unpin']
 
 const KINDS: readonly unknown[] = ['timer', 'task'] satisfies NewTimer['kind'][]
 

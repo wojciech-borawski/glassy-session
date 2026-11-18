@@ -179,6 +179,18 @@ describe('the timer card', () => {
     expect(within(screen.getByRole('article', { name: 'Write report' })).getByText('Last time: finished')).toBeInTheDocument()
   })
 
+  test('of a repeating task whose repeat day before was skipped with nothing tracked says it was skipped', () => {
+    renderCard(createTimer({ ...writeReport, repeatDays: [2, 4] }), NINE, undefined, { planned: 4 * 60 * MINUTE, tracked: 0, finished: false, skipped: true })
+
+    expect(within(screen.getByRole('article', { name: 'Write report' })).getByText('Last time: skipped')).toBeInTheDocument()
+  })
+
+  test('of a repeating task whose repeat day before was skipped after some time tracked says how much and that it was skipped', () => {
+    renderCard(createTimer({ ...writeReport, repeatDays: [2, 4] }), NINE, undefined, { planned: 4 * 60 * MINUTE, tracked: 40 * MINUTE, finished: false, skipped: true })
+
+    expect(within(screen.getByRole('article', { name: 'Write report' })).getByText('Last time: 40m of 4h, skipped')).toBeInTheDocument()
+  })
+
   test('of a repeating task says nothing of last time once it has started or is done', () => {
     const lastTime = { planned: 60 * MINUTE, tracked: 40 * MINUTE, finished: false }
     const task = createTimer({ ...writeReport, repeatDays: [2, 4] })
@@ -186,6 +198,39 @@ describe('the timer card', () => {
     renderCard(markDone(task, NINE).timer, NINE + MINUTE, undefined, lastTime)
 
     expect(screen.queryByText(/Last time/)).not.toBeInTheDocument()
+  })
+
+  describe('Skip today', () => {
+    /** Tuesday 9:00 on the local clock, so the repeat day does not depend on the machine's time zone. */
+    const TUESDAY = new Date(2026, 10, 17, 9).getTime()
+    const reading = createTimer({ ...writeReport, id: 'read', name: 'Read', repeatDays: [2, 4] })
+
+    test('is offered for a repeating task on one of its repeat days, named after the task, and asked for when chosen', async () => {
+      const { emitted } = renderCard(reading, TUESDAY)
+      const card = screen.getByRole('article', { name: 'Read' })
+
+      expect(buttonNames(card)).toEqual(['Start Read', 'Mark Read done', 'Skip Read today', 'Edit Read'])
+      await userEvent.click(within(card).getByRole('button', { name: 'Skip Read today' }))
+
+      expect(emitted('skipToday')).toHaveLength(1)
+    })
+
+    test('is the one thing besides Edit offered while the run of a focus session uses the task', () => {
+      renderCard({ ...reading, remainingTime: 70 * MINUTE }, TUESDAY, 'Morning')
+
+      expect(buttonNames(screen.getByRole('article', { name: 'Read' }))).toEqual(['Skip Read today', 'Edit Read'])
+    })
+
+    test.each([
+      ['a repeating task done for the day', markDone(reading, TUESDAY).timer, TUESDAY],
+      ['a repeating task on a day that is not one of its repeat days', reading, TUESDAY + 24 * 60 * MINUTE],
+      ['a one-time task', createTimer({ ...writeReport, id: 'read', name: 'Read' }), TUESDAY],
+      ['a timer', createTimer({ ...writeReport, id: 'read', name: 'Read', kind: 'timer' }), TUESDAY]
+    ])('is not offered for %s', (_, timer, now) => {
+      renderCard(timer, now)
+
+      expect(within(screen.getByRole('article', { name: 'Read' })).queryByRole('button', { name: 'Skip Read today' })).not.toBeInTheDocument()
+    })
   })
 
   test('of a task offers its statistics', async () => {
